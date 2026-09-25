@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <longdescription lang="en">
+    Ship of Harkinian is a native PC port of The Legend of Zelda: Ocarina of
+    Time. It includes enhancements and a built-in randomizer, but does not
+    include Nintendo game assets. A legally obtained supported game dump is
+    required to generate the user's game-data archive.
+  </longdescription>
+  <use>
+    <flag name="remote-control">
+      Build Ship of Harkinian's SDL2_net remote-control support.
+    </flag>
+    <flag name="tts">
+      Build Linux text-to-speech support using eSpeak NG.
+    </flag>
+  </use>
+  <upstream>
+    <bugs-to>https://github.com/HarbourMasters/Shipwright/issues</bugs-to>
+    <doc>https://www.shipofharkinian.com/</doc>
+    <remote-id type="github">HarbourMasters/Shipwright</remote-id>
+  </upstream>
+</pkgmetadata>
