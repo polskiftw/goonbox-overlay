@@ -17,6 +17,7 @@ HOMEPAGE="https://www.shipofharkinian.com/ https://github.com/HarbourMasters/Shi
 # entries cover source components bundled into the build.
 LICENSE="all-rights-reserved MIT MIT-0 WTFPL-2 ZLIB"
 SLOT="0"
+KEYWORDS="~amd64"
 IUSE="remote-control tts"
 
 # Be conservative while upstream has no repository-wide license.
