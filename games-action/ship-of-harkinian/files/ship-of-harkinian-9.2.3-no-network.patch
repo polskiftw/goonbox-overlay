@@ -1,0 +1,32 @@
+diff --git a/libultraship/cmake/dependencies/common.cmake b/libultraship/cmake/dependencies/common.cmake
+--- a/libultraship/cmake/dependencies/common.cmake
++++ b/libultraship/cmake/dependencies/common.cmake
+@@ -52,7 +52,12 @@ if(INCLUDE_MPQ_SUPPORT)
+ 
+ #=================== STB ===================
+ set(STB_DIR ${CMAKE_BINARY_DIR}/_deps/stb)
+-file(DOWNLOAD "https://github.com/nothings/stb/raw/0bc88af4de5fb022db643c2d8e549a0927749354/stb_image.h" "${STB_DIR}/stb_image.h")
++if(NOT DEFINED STB_IMAGE_HEADER OR NOT EXISTS "${STB_IMAGE_HEADER}")
++    message(FATAL_ERROR "STB_IMAGE_HEADER must point to a pre-fetched stb_image.h")
++endif()
++file(MAKE_DIRECTORY "${STB_DIR}")
++configure_file("${STB_IMAGE_HEADER}" "${STB_DIR}/stb_image.h" COPYONLY)
+ file(WRITE "${STB_DIR}/stb_impl.c" "#define STB_IMAGE_IMPLEMENTATION\n#include \"stb_image.h\"")
+ 
+ add_library(stb STATIC)
+diff --git a/soh/CMakeLists.txt b/soh/CMakeLists.txt
+--- a/soh/CMakeLists.txt
++++ b/soh/CMakeLists.txt
+@@ -723,8 +723,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+ INSTALL(FILES ${CMAKE_BINARY_DIR}/soh/soh.o2r DESTINATION . COMPONENT ship)
+ endif()
+ 
+-find_program(CURL NAMES curl DOC "Path to the curl program.  Used to download files.")
+-execute_process(COMMAND ${CURL} -sSfL https://raw.githubusercontent.com/mdqinc/SDL_GameControllerDB/master/gamecontrollerdb.txt -o ${CMAKE_BINARY_DIR}/gamecontrollerdb.txt OUTPUT_VARIABLE RESULT)
++if(NOT DEFINED GAMECONTROLLERDB_FILE OR NOT EXISTS "${GAMECONTROLLERDB_FILE}")
++    message(FATAL_ERROR "GAMECONTROLLERDB_FILE must point to a pre-fetched gamecontrollerdb.txt")
++endif()
++configure_file("${GAMECONTROLLERDB_FILE}" "${CMAKE_BINARY_DIR}/gamecontrollerdb.txt" COPYONLY)
+ 
+ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/macosx/Info.plist.in ${CMAKE_BINARY_DIR}/macosx/Info.plist @ONLY)
