@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: pkgcheck-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pkgcheck:
     runs-on: ubuntu-latest
