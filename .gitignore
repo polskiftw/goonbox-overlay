@@ -1,0 +1,9 @@
+# Editor and patch leftovers
+*~
+*.swp
+*.swo
+*.orig
+*.rej
+
+# Generated repository cache; Portage can recreate it locally.
+metadata/md5-cache/
