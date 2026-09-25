@@ -67,7 +67,11 @@ _git_checkout_dependency() {
 	local commit=${2}
 	local id=${3}
 	local destination=${4}
+	local EGIT_BRANCH=${5}
 
+	# git-r3 uses EGIT_BRANCH dynamically.  Keep Shipwright's develop branch
+	# from leaking into auxiliary repositories, while still fetching the exact
+	# pinned commit from the branch that contains it.
 	git-r3_fetch "${uri}" "${commit}" "${id}"
 	git-r3_checkout "${uri}" "${WORKDIR}/${destination}" "${id}"
 }
@@ -82,35 +86,35 @@ src_unpack() {
 	_git_checkout_dependency \
 		"https://github.com/mackron/dr_libs.git" \
 		"${DR_LIBS_COMMIT}" \
-		dr-libs dr_libs
+		dr-libs dr_libs master
 	_git_checkout_dependency \
 		"https://github.com/ocornut/imgui.git" \
 		"${IMGUI_COMMIT}" \
-		imgui imgui
+		imgui imgui docking
 	_git_checkout_dependency \
 		"https://github.com/ladislav-zezula/StormLib.git" \
 		"${STORMLIB_COMMIT}" \
-		stormlib stormlib
+		stormlib stormlib master
 	_git_checkout_dependency \
 		"https://github.com/glankk/libgfxd.git" \
 		"${LIBGFXD_COMMIT}" \
-		libgfxd libgfxd
+		libgfxd libgfxd master
 	_git_checkout_dependency \
 		"https://github.com/bshoshany/thread-pool.git" \
 		"${THREADPOOL_COMMIT}" \
-		threadpool threadpool
+		threadpool threadpool master
 	_git_checkout_dependency \
 		"https://github.com/KiritoDv/prism-processor.git" \
 		"${PRISM_COMMIT}" \
-		prism prism
+		prism prism main
 	_git_checkout_dependency \
 		"https://github.com/nothings/stb.git" \
 		"${STB_COMMIT}" \
-		stb stb
+		stb stb master
 	_git_checkout_dependency \
 		"https://github.com/mdqinc/SDL_GameControllerDB.git" \
 		"${GAMECONTROLLERDB_COMMIT}" \
-		gamecontrollerdb gamecontrollerdb
+		gamecontrollerdb gamecontrollerdb master
 }
 
 src_prepare() {
