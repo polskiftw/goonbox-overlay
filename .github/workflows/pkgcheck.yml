@@ -16,10 +16,10 @@ jobs:
   pkgcheck:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out goonbox overlay
+      - name: Check out goonbox-overlay
         uses: actions/checkout@v5
         with:
-          path: goonbox
+          path: goonbox-overlay
 
       - name: Check out Gentoo repository
         uses: actions/checkout@v5
@@ -43,12 +43,12 @@ jobs:
             echo "[gentoo]"
             echo "location = $GITHUB_WORKSPACE/gentoo"
             echo
-            echo "[goonbox]"
-            echo "location = $GITHUB_WORKSPACE/goonbox"
+            echo "[goonbox-overlay]"
+            echo "location = $GITHUB_WORKSPACE/goonbox-overlay"
             echo "masters = gentoo"
           } | sudo tee /etc/portage/repos.conf/ci.conf >/dev/null
 
           sudo ln -s             "$GITHUB_WORKSPACE/gentoo/profiles/default/linux/amd64/23.0"             /etc/portage/make.profile
 
       - name: Run pkgcheck
-        run: pkgcheck scan --exit error "$GITHUB_WORKSPACE/goonbox"
+        run: pkgcheck scan --exit error "$GITHUB_WORKSPACE/goonbox-overlay"
