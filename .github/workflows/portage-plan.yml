@@ -55,9 +55,9 @@ jobs:
           masters = gentoo
           EOF
 
-              rm -f /etc/portage/make.profile
-              ln -s /var/db/repos/gentoo/profiles/default/linux/amd64/23.0/desktop \
-                /etc/portage/make.profile
+              mkdir -p /etc/portage/package.use
+              echo "media-libs/libglvnd X" \
+                > /etc/portage/package.use/opengl-ci
 
               mkdir -p /etc/portage/package.accept_keywords
               echo "=games-action/ship-of-harkinian-9.2.3 **" \
