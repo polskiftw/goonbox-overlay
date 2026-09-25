@@ -22,7 +22,7 @@ jobs:
   ship-of-harkinian:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out goonbox overlay
+      - name: Check out goonbox-overlay
         uses: actions/checkout@v5
 
       - name: Resolve package with Portage in Gentoo
@@ -31,15 +31,15 @@ jobs:
           docker pull gentoo/stage3:latest
 
           docker create \
-            --name goonbox-portage-snapshot \
+            --name goonbox-overlay-portage-snapshot \
             gentoo/portage:latest /bin/true
 
           docker run --rm \
-            --volumes-from goonbox-portage-snapshot \
-            -v "$GITHUB_WORKSPACE:/work/goonbox:ro" \
+            --volumes-from goonbox-overlay-portage-snapshot \
+            -v "$GITHUB_WORKSPACE:/work/goonbox-overlay:ro" \
             gentoo/stage3:latest \
             /bin/bash -euxo pipefail -c '
-              ln -s /work/goonbox /var/db/repos/goonbox
+              ln -s /work/goonbox-overlay /var/db/repos/goonbox-overlay
 
               rm -rf /etc/portage/repos.conf
               mkdir -p /etc/portage/repos.conf
@@ -50,8 +50,8 @@ jobs:
           [gentoo]
           location = /var/db/repos/gentoo
 
-          [goonbox]
-          location = /var/db/repos/goonbox
+          [goonbox-overlay]
+          location = /var/db/repos/goonbox-overlay
           masters = gentoo
           EOF
 
@@ -74,4 +74,4 @@ jobs:
                 =games-action/ship-of-harkinian-9.2.3
             '
 
-          docker rm goonbox-portage-snapshot
+          docker rm goonbox-overlay-portage-snapshot
