@@ -56,8 +56,10 @@ jobs:
           EOF
 
               mkdir -p /etc/portage/package.use
-              echo "media-libs/libglvnd X" \
-                > /etc/portage/package.use/opengl-ci
+              cat > /etc/portage/package.use/graphics-ci <<EOF
+          media-libs/libglvnd X
+          media-libs/libsdl2 opengl video
+          EOF
 
               mkdir -p /etc/portage/package.accept_keywords
               echo "=games-action/ship-of-harkinian-9.2.3 **" \
