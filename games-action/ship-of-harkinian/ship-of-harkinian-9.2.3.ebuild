@@ -139,6 +139,9 @@ src_configure() {
 		-DPython3_EXECUTABLE="${PYTHON}"
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/libexec/${PN}"
 		-DNON_PORTABLE=ON
+		# Gentoo's cmake.eclass seeds BUILD_SHARED_LIBS=ON. Upstream SoH
+		# intends bundled helper libraries such as StormLib to be static.
+		-DBUILD_SHARED_LIBS=OFF
 
 		# A hard guard against an unaccounted-for FetchContent dependency.
 		-DFETCHCONTENT_FULLY_DISCONNECTED=ON
