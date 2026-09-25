@@ -1,7 +1,22 @@
 diff --git a/libultraship/cmake/dependencies/common.cmake b/libultraship/cmake/dependencies/common.cmake
 --- a/libultraship/cmake/dependencies/common.cmake
 +++ b/libultraship/cmake/dependencies/common.cmake
-@@ -52,7 +52,11 @@ if(INCLUDE_MPQ_SUPPORT)
+@@ -38,19 +38,13 @@
+ # ========= StormLib =============
+ if(INCLUDE_MPQ_SUPPORT)
+-    set(stormlib_patch_file ${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependencies/patches/stormlib-optimizations.patch)
+-    set(stormlib_apply_patch_command ${CMAKE_COMMAND} -Dpatch_file=${stormlib_patch_file} -Dwith_reset=TRUE -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependencies/git-patch.cmake)
+-
+-    FetchContent_Declare(
+-        StormLib
+-        GIT_REPOSITORY https://github.com/ladislav-zezula/StormLib.git
+-        GIT_TAG v9.25
+-        PATCH_COMMAND ${stormlib_apply_patch_command}
+-    )
+-    FetchContent_MakeAvailable(StormLib)
+-    list(APPEND ADDITIONAL_LIB_INCLUDES ${stormlib_SOURCE_DIR}/src)
++    find_package(StormLib CONFIG REQUIRED)
+ endif()
  
  #=================== STB ===================
  set(STB_DIR ${CMAKE_BINARY_DIR}/_deps/stb)
@@ -14,6 +29,20 @@ diff --git a/libultraship/cmake/dependencies/common.cmake b/libultraship/cmake/d
  file(WRITE "${STB_DIR}/stb_impl.c" "#define STB_IMAGE_IMPLEMENTATION\n#include \"stb_image.h\"")
  
  add_library(stb STATIC)
+diff --git a/libultraship/src/CMakeLists.txt b/libultraship/src/CMakeLists.txt
+--- a/libultraship/src/CMakeLists.txt
++++ b/libultraship/src/CMakeLists.txt
+@@ -48,7 +48,3 @@
+ if(INCLUDE_MPQ_SUPPORT)
+-    if (NOT CMAKE_SYSTEM_NAME STREQUAL "Windows" AND NOT CMAKE_SYSTEM_NAME STREQUAL "iOS")
+-        target_link_libraries(libultraship PUBLIC "$<LINK_LIBRARY:WHOLE_ARCHIVE,storm>")
+-    else()
+-        target_link_libraries(libultraship PUBLIC storm)
+-    endif()
++    target_link_libraries(libultraship PUBLIC StormLib::storm)
+ endif()
+-
+-target_link_libraries(libultraship
 diff --git a/soh/CMakeLists.txt b/soh/CMakeLists.txt
 --- a/soh/CMakeLists.txt
 +++ b/soh/CMakeLists.txt
