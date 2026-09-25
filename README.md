@@ -32,6 +32,43 @@ Packages from this repository will appear as `::goonbox`.
 | --- | --- |
 | `games-action/ship-of-harkinian` | Native Linux source build of Ship of Harkinian |
 
+## Ship of Harkinian
+
+The current package is `games-action/ship-of-harkinian-9.2.3`.
+
+The ebuild fetches versioned source from Git because Shipwright's release source has
+nested submodules and additional CMake-managed source dependencies. Every repository
+is pinned to an exact commit, and all network activity is confined to Portage's
+fetch/unpack phase. CMake is run with FetchContent disconnected.
+
+Gentoo's VCS package policy means the ebuild intentionally has no `KEYWORDS`.
+Enable this exact version locally:
+
+```sh
+mkdir -p /etc/portage/package.accept_keywords
+echo '=games-action/ship-of-harkinian-9.2.3 **' > \
+    /etc/portage/package.accept_keywords/ship-of-harkinian
+```
+
+Then install normally:
+
+```sh
+emerge -av games-action/ship-of-harkinian
+```
+
+Optional USE flags:
+
+- `remote-control` — SDL2_net remote-control support.
+- `tts` — Linux text-to-speech support through eSpeak NG.
+
+The package builds upstream's `NON_PORTABLE` configuration. Read-only application
+files are managed by Portage under `/usr/libexec/ship-of-harkinian`; writable
+configuration, saves, mods, and ROM-derived game-data archives remain in the user's
+application-data directory.
+
+The repository never contains an Ocarina of Time ROM or Nintendo-derived game
+assets.
+
 ## Repository policy
 
 - Prefer source builds over repackaged binaries.
