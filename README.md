@@ -48,7 +48,15 @@ Enable this exact version locally:
 mkdir -p /etc/portage/package.accept_keywords
 echo '=games-action/ship-of-harkinian-9.2.3 **' > \
     /etc/portage/package.accept_keywords/ship-of-harkinian
+
+mkdir -p /etc/portage/package.license
+echo '=games-action/ship-of-harkinian-9.2.3 all-rights-reserved' > \
+    /etc/portage/package.license/ship-of-harkinian
 ```
+
+The per-package license acceptance is intentional: Shipwright does not currently
+publish a repository-wide license, so the ebuild records that source conservatively
+instead of guessing a license.
 
 Then install normally:
 
