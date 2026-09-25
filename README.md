@@ -8,11 +8,11 @@ This is an unofficial overlay. Packages are maintained independently from the Ge
 
 ## Add the repository
 
-Create `/etc/portage/repos.conf/goonbox.conf` as root:
+Create `/etc/portage/repos.conf/goonbox-overlay.conf` as root:
 
 ```ini
-[goonbox]
-location = /var/db/repos/goonbox
+[goonbox-overlay]
+location = /var/db/repos/goonbox-overlay
 sync-type = git
 sync-uri = https://github.com/polskiftw/goonbox-overlay.git
 auto-sync = yes
@@ -24,7 +24,7 @@ Then sync normally:
 emerge --sync
 ```
 
-Packages from this repository will appear as `::goonbox`.
+Packages from this repository will appear as `::goonbox-overlay`.
 
 ## Packages
 
@@ -46,11 +46,11 @@ through the normal Gentoo testing-keyword mechanism:
 
 ```sh
 mkdir -p /etc/portage/package.accept_keywords
-echo '=games-action/ship-of-harkinian-9.2.3 ~amd64' > \
+echo 'games-action/ship-of-harkinian ~amd64' > \
     /etc/portage/package.accept_keywords/ship-of-harkinian
 
 mkdir -p /etc/portage/package.license
-echo '=games-action/ship-of-harkinian-9.2.3 all-rights-reserved' > \
+echo 'games-action/ship-of-harkinian all-rights-reserved' > \
     /etc/portage/package.license/ship-of-harkinian
 ```
 
@@ -101,7 +101,7 @@ GitHub
         |
         | emerge --sync
         v
-/var/db/repos/goonbox
+/var/db/repos/goonbox-overlay
         |
         v
 Portage
