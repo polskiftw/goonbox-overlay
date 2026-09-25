@@ -77,14 +77,38 @@ src_unpack() {
 	# Upstream normally FetchContent/downloads these during CMake configure.
 	# Pull them into Portage's fetch phase instead so configure/build can remain
 	# network-sandboxed and deterministic.
-	_git_checkout_dependency 		"https://github.com/mackron/dr_libs.git" 		"${DR_LIBS_COMMIT}" dr-libs dr_libs
-	_git_checkout_dependency 		"https://github.com/ocornut/imgui.git" 		"${IMGUI_COMMIT}" imgui imgui
-	_git_checkout_dependency 		"https://github.com/ladislav-zezula/StormLib.git" 		"${STORMLIB_COMMIT}" stormlib stormlib
-	_git_checkout_dependency 		"https://github.com/glankk/libgfxd.git" 		"${LIBGFXD_COMMIT}" libgfxd libgfxd
-	_git_checkout_dependency 		"https://github.com/bshoshany/thread-pool.git" 		"${THREADPOOL_COMMIT}" threadpool threadpool
-	_git_checkout_dependency 		"https://github.com/KiritoDv/prism-processor.git" 		"${PRISM_COMMIT}" prism prism
-	_git_checkout_dependency 		"https://github.com/nothings/stb.git" 		"${STB_COMMIT}" stb stb
-	_git_checkout_dependency 		"https://github.com/mdqinc/SDL_GameControllerDB.git" 		"${GAMECONTROLLERDB_COMMIT}" gamecontrollerdb gamecontrollerdb
+	_git_checkout_dependency \
+		"https://github.com/mackron/dr_libs.git" \
+		"${DR_LIBS_COMMIT}" \
+		dr-libs dr_libs
+	_git_checkout_dependency \
+		"https://github.com/ocornut/imgui.git" \
+		"${IMGUI_COMMIT}" \
+		imgui imgui
+	_git_checkout_dependency \
+		"https://github.com/ladislav-zezula/StormLib.git" \
+		"${STORMLIB_COMMIT}" \
+		stormlib stormlib
+	_git_checkout_dependency \
+		"https://github.com/glankk/libgfxd.git" \
+		"${LIBGFXD_COMMIT}" \
+		libgfxd libgfxd
+	_git_checkout_dependency \
+		"https://github.com/bshoshany/thread-pool.git" \
+		"${THREADPOOL_COMMIT}" \
+		threadpool threadpool
+	_git_checkout_dependency \
+		"https://github.com/KiritoDv/prism-processor.git" \
+		"${PRISM_COMMIT}" \
+		prism prism
+	_git_checkout_dependency \
+		"https://github.com/nothings/stb.git" \
+		"${STB_COMMIT}" \
+		stb stb
+	_git_checkout_dependency \
+		"https://github.com/mdqinc/SDL_GameControllerDB.git" \
+		"${GAMECONTROLLERDB_COMMIT}" \
+		gamecontrollerdb gamecontrollerdb
 }
 
 src_prepare() {
