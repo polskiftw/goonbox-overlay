@@ -29,7 +29,7 @@ RDEPEND="
 	dev-libs/tinyxml2
 	media-libs/libogg
 	media-libs/libpng
-	media-libs/libsdl2
+	media-libs/libsdl2[opengl,video]
 	media-libs/opus
 	media-libs/opusfile
 	media-libs/libvorbis
