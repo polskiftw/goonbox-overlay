@@ -41,12 +41,12 @@ nested submodules and additional CMake-managed source dependencies. Every reposi
 is pinned to an exact commit, and all network activity is confined to Portage's
 fetch/unpack phase. CMake is run with FetchContent disconnected.
 
-Gentoo's VCS package policy means the ebuild intentionally has no `KEYWORDS`.
-Enable this exact version locally:
+Ship of Harkinian is currently keyworded `~amd64`, so amd64 users can opt in
+through the normal Gentoo testing-keyword mechanism:
 
 ```sh
 mkdir -p /etc/portage/package.accept_keywords
-echo '=games-action/ship-of-harkinian-9.2.3 **' > \
+echo '=games-action/ship-of-harkinian-9.2.3 ~amd64' > \
     /etc/portage/package.accept_keywords/ship-of-harkinian
 
 mkdir -p /etc/portage/package.license
