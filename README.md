@@ -34,9 +34,9 @@ Packages from this repository will appear as `::goonbox-overlay`.
 
 ## Ship of Harkinian
 
-The current package is `games-action/ship-of-harkinian-9.2.3-r1`.
+The current package is `games-action/ship-of-harkinian-9.2.3`.
 
-The ebuild uses Gentoo's `app-arch/stormlib` system package and fetches the remaining versioned source from Git because Shipwright's release source has
+The ebuild fetches versioned source from Git because Shipwright's release source has
 nested submodules and additional CMake-managed source dependencies. Every repository
 is pinned to an exact commit, and all network activity is confined to Portage's
 fetch/unpack phase. CMake is run with FetchContent disconnected.
@@ -46,10 +46,8 @@ through the normal Gentoo testing-keyword mechanism:
 
 ```sh
 mkdir -p /etc/portage/package.accept_keywords
-cat > /etc/portage/package.accept_keywords/ship-of-harkinian <<'EOF'
-games-action/ship-of-harkinian ~amd64
-app-arch/stormlib ~amd64
-EOF
+echo 'games-action/ship-of-harkinian ~amd64' > \
+    /etc/portage/package.accept_keywords/ship-of-harkinian
 
 mkdir -p /etc/portage/package.license
 echo 'games-action/ship-of-harkinian all-rights-reserved' > \
