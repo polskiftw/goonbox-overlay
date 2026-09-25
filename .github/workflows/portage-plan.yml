@@ -1,0 +1,71 @@
+name: Portage plan
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "games-action/**"
+      - ".github/workflows/portage-plan.yml"
+  pull_request:
+    paths:
+      - "games-action/**"
+      - ".github/workflows/portage-plan.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portage-plan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ship-of-harkinian:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out goonbox overlay
+        uses: actions/checkout@v5
+
+      - name: Resolve package with Portage in Gentoo
+        run: |
+          docker pull gentoo/portage:latest
+          docker pull gentoo/stage3:latest
+
+          docker create \
+            --name goonbox-portage-snapshot \
+            gentoo/portage:latest /bin/true
+
+          docker run --rm \
+            --volumes-from goonbox-portage-snapshot \
+            -v "$GITHUB_WORKSPACE:/work/goonbox:ro" \
+            gentoo/stage3:latest \
+            /bin/bash -euxo pipefail -c '
+              ln -s /work/goonbox /var/db/repos/goonbox
+
+              rm -rf /etc/portage/repos.conf
+              mkdir -p /etc/portage/repos.conf
+              cat > /etc/portage/repos.conf/ci.conf <<EOF
+          [DEFAULT]
+          main-repo = gentoo
+
+          [gentoo]
+          location = /var/db/repos/gentoo
+
+          [goonbox]
+          location = /var/db/repos/goonbox
+          masters = gentoo
+          EOF
+
+              mkdir -p /etc/portage/package.accept_keywords
+              echo "=games-action/ship-of-harkinian-9.2.3 **" \
+                > /etc/portage/package.accept_keywords/ship-of-harkinian
+
+              mkdir -p /etc/portage/package.license
+              echo "=games-action/ship-of-harkinian-9.2.3 all-rights-reserved" \
+                > /etc/portage/package.license/ship-of-harkinian
+
+              emerge --info
+              emerge --pretend --verbose --tree --with-bdeps=y \
+                =games-action/ship-of-harkinian-9.2.3
+            '
+
+          docker rm goonbox-portage-snapshot
