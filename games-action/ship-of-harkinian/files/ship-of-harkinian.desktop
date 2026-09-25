@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Ship of Harkinian
+Comment=Native PC port of The Legend of Zelda: Ocarina of Time
+Exec=ship-of-harkinian
+Icon=ship-of-harkinian
+Terminal=false
+Categories=Game;
