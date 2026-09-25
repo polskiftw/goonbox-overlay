@@ -41,8 +41,6 @@ diff --git a/libultraship/src/CMakeLists.txt b/libultraship/src/CMakeLists.txt
 -    endif()
 +    target_link_libraries(libultraship PUBLIC StormLib::storm)
  endif()
--
--target_link_libraries(libultraship
 diff --git a/soh/CMakeLists.txt b/soh/CMakeLists.txt
 --- a/soh/CMakeLists.txt
 +++ b/soh/CMakeLists.txt
