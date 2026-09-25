@@ -7,7 +7,8 @@ EGIT_REPO_URI="https://github.com/HarbourMasters/Shipwright.git"
 EGIT_BRANCH="develop"
 EGIT_COMMIT="cb71e22a79bc5d1f688fa881795bbd93094895fc"
 
-inherit cmake desktop git-r3 xdg
+PYTHON_COMPAT=( python3_1{2..4} )
+inherit cmake desktop git-r3 python-any-r1 xdg
 
 DESCRIPTION="Native PC port of The Legend of Zelda: Ocarina of Time"
 HOMEPAGE="https://www.shipofharkinian.com/ https://github.com/HarbourMasters/Shipwright"
@@ -32,7 +33,7 @@ RDEPEND="
 	media-libs/opus
 	media-libs/opusfile
 	media-libs/libvorbis
-	sys-libs/zlib
+	virtual/zlib
 	virtual/libusb:1
 	virtual/opengl
 	remote-control? ( media-libs/sdl2-net )
@@ -43,7 +44,7 @@ DEPEND="
 	dev-cpp/nlohmann_json
 "
 BDEPEND="
-	dev-lang/python:*
+	${PYTHON_DEPS}
 	sys-apps/lsb-release
 "
 
@@ -126,9 +127,11 @@ src_prepare() {
 }
 
 src_configure() {
+	python_setup
 	CMAKE_BUILD_TYPE="Release"
 
 	local mycmakeargs=(
+		-DPython3_EXECUTABLE="${PYTHON}"
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/libexec/${PN}"
 		-DNON_PORTABLE=ON
 
