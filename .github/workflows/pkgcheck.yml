@@ -1,0 +1,48 @@
+name: pkgcheck
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pkgcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out goonbox overlay
+        uses: actions/checkout@v4
+        with:
+          path: goonbox
+
+      - name: Check out Gentoo repository
+        uses: actions/checkout@v4
+        with:
+          repository: gentoo/gentoo
+          path: gentoo
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install pkgcheck
+        run: python -m pip install --disable-pip-version-check pkgcheck
+
+      - name: Configure repositories
+        run: |
+          sudo mkdir -p /etc/portage/repos.conf
+          {
+            echo "[gentoo]"
+            echo "location = $GITHUB_WORKSPACE/gentoo"
+            echo
+            echo "[goonbox]"
+            echo "location = $GITHUB_WORKSPACE/goonbox"
+            echo "masters = gentoo"
+          } | sudo tee /etc/portage/repos.conf/ci.conf >/dev/null
+
+      - name: Run pkgcheck
+        run: pkgcheck scan --exit error "$GITHUB_WORKSPACE/goonbox"
