@@ -16,7 +16,7 @@ HOMEPAGE="https://www.shipofharkinian.com/ https://github.com/HarbourMasters/Shi
 # entries cover source components bundled into the build.
 LICENSE="all-rights-reserved BSD-2 MIT MIT-0 WTFPL-2 ZLIB"
 SLOT="0"
-IUSE="remote-control tts"
+IUSE="tts"
 
 # Be conservative while upstream has no repository-wide license.
 RESTRICT="bindist mirror"
@@ -29,13 +29,13 @@ RDEPEND="
 	media-libs/libogg
 	media-libs/libpng
 	media-libs/libsdl2[opengl,video]
+	media-libs/sdl2-net
 	media-libs/opus
 	media-libs/opusfile
 	media-libs/libvorbis
 	virtual/zlib
 	virtual/libusb:1
 	virtual/opengl
-	remote-control? ( media-libs/sdl2-net )
 	tts? ( app-accessibility/espeak-ng )
 "
 DEPEND="
@@ -237,7 +237,6 @@ src_configure() {
 		-DSTORM_SKIP_INSTALL=ON
 		-DSTORM_BUILD_TESTS=OFF
 		-DSTORM_USE_BUNDLED_LIBRARIES=OFF
-		-DBUILD_REMOTE_CONTROL=$(usex remote-control ON OFF)
 	)
 
 	if ! use tts; then
