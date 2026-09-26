@@ -212,6 +212,7 @@ src_configure() {
 	local mycmakeargs=(
 		-DPython3_EXECUTABLE="${PYTHON}"
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/libexec/${PN}"
+		-DNON_PORTABLE=ON
 
 		# Gentoo's cmake.eclass seeds BUILD_SHARED_LIBS=ON. Upstream SoH
 		# intends bundled helper libraries such as StormLib to be static.
