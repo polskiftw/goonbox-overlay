@@ -64,6 +64,28 @@ Then install normally:
 emerge -av games-action/ship-of-harkinian
 ```
 
+### Rolling develop build
+
+A live `games-action/ship-of-harkinian-9999` ebuild is also available. It tracks
+upstream Shipwright's `develop` branch and follows the gitlink revisions selected
+there for libultraship and Torch. FetchContent dependencies are fetched during
+`src_unpack` from the revisions declared by the checked-out source, while CMake
+remains fully disconnected from the network.
+
+As a normal Gentoo live ebuild it has no `KEYWORDS`. Opt in explicitly:
+
+```sh
+echo '=games-action/ship-of-harkinian-9999 **' >> \
+    /etc/portage/package.accept_keywords/ship-of-harkinian
+
+emerge -av =games-action/ship-of-harkinian-9999
+```
+
+The stable and live ebuilds coexist in the repository but both use `SLOT="0"`,
+so only one is installed at a time. Once `9999` is accepted it sorts newer than
+9.2.3 and normal world updates may keep the live version installed. To return to
+stable, remove the `9999 **` accept-keywords line and emerge 9.2.3 explicitly.
+
 Optional USE flags:
 
 - `remote-control` — SDL2_net remote-control support.
