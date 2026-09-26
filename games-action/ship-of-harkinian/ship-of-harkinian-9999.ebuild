@@ -173,14 +173,22 @@ src_unpack() {
 
 	# libultraship downloads stb_image.h directly rather than using
 	# FetchContent.  Preserve the exact revision named by current develop.
-	stb_commit=$(sed -n -E 		's|.*github.com/nothings/stb/raw/([0-9a-fA-F]{40})/stb_image\.h.*|\1|p' 		"${common_cmake}")
+	stb_commit=$(sed -n -E \
+		's|.*github.com/nothings/stb/raw/([0-9a-fA-F]{40})/stb_image\.h.*|\1|p' \
+		"${common_cmake}")
 	[[ ${stb_commit} =~ ^[0-9a-fA-F]{40}$ ]] ||
 		die "Could not determine stb revision from ${common_cmake}"
-	_git_checkout_ref 		"https://github.com/nothings/stb.git" 		"${stb_commit}" 		stb stb
+	_git_checkout_ref \
+		"https://github.com/nothings/stb.git" \
+		"${stb_commit}" \
+		stb stb
 
 	# Upstream intentionally tracks the controller database's master branch.
 	# Fetch it during src_unpack so soh/CMakeLists.txt never needs curl access.
-	_git_checkout_ref 		"https://github.com/mdqinc/SDL_GameControllerDB.git" 		"refs/heads/master" 		gamecontrollerdb gamecontrollerdb
+	_git_checkout_ref \
+		"https://github.com/mdqinc/SDL_GameControllerDB.git" \
+		"refs/heads/master" \
+		gamecontrollerdb gamecontrollerdb
 }
 
 src_prepare() {
