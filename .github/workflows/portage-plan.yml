@@ -153,7 +153,7 @@ jobs:
           media-libs/mesa wayland
           media-libs/vulkan-loader X wayland
           media-video/mpv libmpv wayland
-          net-libs/webkit-gtk wayland
+          net-libs/webkit-gtk X wayland
           x11-libs/cairo X
           EOF
 
