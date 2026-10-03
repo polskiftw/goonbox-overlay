@@ -146,8 +146,15 @@ jobs:
               mkdir -p /etc/portage/package.use
               cat > /etc/portage/package.use/stremio-linux-shell <<EOF
           gui-libs/gtk X wayland
+          media-libs/freetype harfbuzz
+          media-libs/gst-plugins-base opengl
+          media-libs/harfbuzz icu
+          media-libs/libglvnd X
+          media-libs/mesa wayland
+          media-libs/vulkan-loader X wayland
           media-video/mpv libmpv wayland
           net-libs/webkit-gtk wayland
+          x11-libs/cairo X
           EOF
 
               ebuild \
