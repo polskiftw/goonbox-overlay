@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Upstream uses the OpenGL GSK renderer on NVIDIA.
+if [ -e /dev/nvidia0 ]; then
+	export GSK_RENDERER=opengl
+fi
+
+export SERVER_PATH="${SERVER_PATH:-/usr/libexec/stremio/server.js}"
+export ANV_DEBUG="${ANV_DEBUG:-video-decode,video-encode}"
+
+exec /usr/libexec/stremio/stremio "$@"
