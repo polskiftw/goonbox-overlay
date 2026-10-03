@@ -384,7 +384,7 @@ RDEPEND="
 	media-libs/libepoxy
 	media-video/mpv[libmpv,wayland]
 	net-libs/glib-networking
-	>=net-libs/nodejs-22.15.0
+	net-libs/nodejs
 	>=net-libs/webkit-gtk-2.52.0:6[wayland]
 "
 DEPEND="${RDEPEND}"
