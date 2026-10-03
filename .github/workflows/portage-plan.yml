@@ -5,10 +5,12 @@ on:
   push:
     paths:
       - "games-action/**"
+      - "media-tv/**"
       - ".github/workflows/portage-plan.yml"
   pull_request:
     paths:
       - "games-action/**"
+      - "media-tv/**"
       - ".github/workflows/portage-plan.yml"
 
 permissions:
@@ -92,3 +94,72 @@ jobs:
             '
 
           docker rm goonbox-overlay-portage-snapshot
+
+
+  stremio-linux-shell:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out goonbox-overlay
+        uses: actions/checkout@v5
+
+      - name: Generate Stremio Manifest and resolve package with Portage
+        run: |
+          docker pull gentoo/portage:latest
+          docker pull gentoo/stage3:latest
+
+          docker create \
+            --name goonbox-overlay-stremio-portage-snapshot \
+            gentoo/portage:latest /bin/true
+
+          docker run --rm \
+            --volumes-from goonbox-overlay-stremio-portage-snapshot \
+            -v "$GITHUB_WORKSPACE:/work/goonbox-overlay" \
+            gentoo/stage3:latest \
+            /bin/bash -euxo pipefail -c '
+              ln -s /work/goonbox-overlay /var/db/repos/goonbox-overlay
+
+              rm -rf /etc/portage/repos.conf
+              mkdir -p /etc/portage/repos.conf
+              cat > /etc/portage/repos.conf/ci.conf <<EOF
+          [DEFAULT]
+          main-repo = gentoo
+
+          [gentoo]
+          location = /var/db/repos/gentoo
+
+          [goonbox-overlay]
+          location = /var/db/repos/goonbox-overlay
+          masters = gentoo
+          EOF
+
+              mkdir -p /etc/portage/package.accept_keywords
+              cat > /etc/portage/package.accept_keywords/stremio-linux-shell <<EOF
+          =media-tv/stremio-linux-shell-1.2.1 ~amd64
+          >=gui-libs/gtk-4.22.0 ~amd64
+          >=gui-libs/libadwaita-1.9.0 ~amd64
+          EOF
+
+              mkdir -p /etc/portage/package.license
+              echo "=media-tv/stremio-linux-shell-1.2.1 all-rights-reserved" \
+                > /etc/portage/package.license/stremio-linux-shell
+
+              mkdir -p /etc/portage/package.use
+              cat > /etc/portage/package.use/stremio-linux-shell <<EOF
+          gui-libs/gtk X wayland
+          media-video/mpv libmpv wayland
+          net-libs/webkit-gtk wayland
+          EOF
+
+              ebuild \
+                /var/db/repos/goonbox-overlay/media-tv/stremio-linux-shell/stremio-linux-shell-1.2.1.ebuild \
+                manifest
+
+              echo "----- STREMIO MANIFEST BEGIN -----"
+              cat /var/db/repos/goonbox-overlay/media-tv/stremio-linux-shell/Manifest
+              echo "----- STREMIO MANIFEST END -----"
+
+              emerge --pretend --verbose --tree --with-bdeps=y \
+                =media-tv/stremio-linux-shell-1.2.1
+            '
+
+          docker rm goonbox-overlay-stremio-portage-snapshot
