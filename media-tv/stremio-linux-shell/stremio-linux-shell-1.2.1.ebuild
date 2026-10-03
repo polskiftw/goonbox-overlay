@@ -378,16 +378,19 @@ KEYWORDS="~amd64"
 
 RESTRICT="bindist mirror"
 
-RDEPEND="
+COMMON_DEPEND="
 	>=gui-libs/gtk-4.22.0:4[X,wayland]
 	>=gui-libs/libadwaita-1.9.0:1
 	media-libs/libepoxy
-	media-video/mpv[libmpv,wayland]
+	media-video/mpv:=[libmpv,wayland]
+	>=net-libs/webkit-gtk-2.52.0:6[X,wayland]
+"
+DEPEND="${COMMON_DEPEND}"
+RDEPEND="
+	${COMMON_DEPEND}
 	net-libs/glib-networking
 	net-libs/nodejs
-	>=net-libs/webkit-gtk-2.52.0:6[wayland]
 "
-DEPEND="${RDEPEND}"
 BDEPEND="
 	dev-util/glib-utils
 	sys-devel/gettext
@@ -441,16 +444,16 @@ src_install() {
 }
 
 pkg_preinst() {
-	gnome2_schemas_savelist
 	xdg_pkg_preinst
+	gnome2_schemas_savelist
 }
 
 pkg_postinst() {
-	gnome2_schemas_update
 	xdg_pkg_postinst
+	gnome2_schemas_update
 }
 
 pkg_postrm() {
-	gnome2_schemas_update
 	xdg_pkg_postrm
+	gnome2_schemas_update
 }
