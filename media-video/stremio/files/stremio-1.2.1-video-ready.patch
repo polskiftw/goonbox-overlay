@@ -1,0 +1,257 @@
+diff --git a/src/app/imp.rs b/src/app/imp.rs
+index 89cd019..ab37c72 100644
+--- a/src/app/imp.rs
++++ b/src/app/imp.rs
+@@ -103,6 +103,16 @@ impl ApplicationImpl for Application {
+             }
+         ));
+ 
++        video.connect_video_ready(clone!(
++            #[weak]
++            webview,
++            move |load_id, ready| {
++                let message =
++                    ipc::create_response(IpcEvent::Mpv(IpcEventMpv::VideoReady((load_id, ready))));
++                webview.send(&message);
++            }
++        ));
++
+         video.connect_mpv_property_change(clone!(
+             #[weak]
+             webview,
+diff --git a/src/app/ipc/event.rs b/src/app/ipc/event.rs
+index 4f07337..4421e14 100644
+--- a/src/app/ipc/event.rs
++++ b/src/app/ipc/event.rs
+@@ -10,6 +10,7 @@ pub enum IpcEventMpv {
+     Set((String, Value)),
+     Change((String, Value)),
+     Ended((String, Option<String>)),
++    VideoReady((u64, bool)),
+ }
+ 
+ #[derive(Deserialize, Debug)]
+diff --git a/src/app/ipc/response.rs b/src/app/ipc/response.rs
+index 5dcb34c..c775f60 100644
+--- a/src/app/ipc/response.rs
++++ b/src/app/ipc/response.rs
+@@ -95,6 +95,19 @@ impl TryFrom<IpcEvent> for IpcMessageResponse {
+                     }
+                 ])),
+             }),
++            IpcEvent::Mpv(IpcEventMpv::VideoReady((load_id, ready))) => Ok(IpcMessageResponse {
++                id: 1,
++                r#type: 1,
++                object: TRANSPORT_NAME.to_owned(),
++                data: None,
++                args: Some(json!([
++                    "mpv-event-video-ready",
++                    {
++                        "loadId": load_id,
++                        "ready": ready,
++                    }
++                ])),
++            }),
+             IpcEvent::MediaStatus(paused) => Ok(IpcMessageResponse {
+                 id: 1,
+                 r#type: 1,
+diff --git a/src/app/video/imp.rs b/src/app/video/imp.rs
+index ca95f65..3b84033 100644
+--- a/src/app/video/imp.rs
++++ b/src/app/video/imp.rs
+@@ -14,6 +14,7 @@ use libmpv2::{
+ use std::{cell::RefCell, env, os::raw::c_void, sync::OnceLock};
+ use tracing::error;
+ 
++use super::ready::VideoReadyState;
+ use crate::spawn_local;
+ 
+ fn get_proc_address(_context: &GLContext, name: &str) -> *mut c_void {
+@@ -30,6 +31,7 @@ enum EventCallback {
+ pub struct Video {
+     mpv: RefCell<Mpv>,
+     render_context: RefCell<Option<RenderContext>>,
++    video_ready: RefCell<VideoReadyState>,
+ }
+ 
+ impl Default for Video {
+@@ -59,6 +61,7 @@ impl Default for Video {
+         Self {
+             mpv: RefCell::new(mpv),
+             render_context: Default::default(),
++            video_ready: Default::default(),
+         }
+     }
+ }
+@@ -80,6 +83,18 @@ impl Video {
+     }
+ 
+     pub fn send_command(&self, name: &str, args: &[&str]) {
++        let loads_file = match name {
++            "loadfile" => Some(true),
++            "stop" => Some(false),
++            _ => None,
++        };
++
++        if let Some(loads_file) = loads_file {
++            let load_id = self.video_ready.borrow_mut().begin_transition(loads_file);
++            self.obj()
++                .emit_by_name::<()>("video-ready", &[&load_id, &false]);
++        }
++
+         if let Err(e) = self.mpv.borrow().command(name, args) {
+             error!("Failed to send command {name}: {e}");
+         }
+@@ -117,6 +132,9 @@ impl ObjectImpl for Video {
+                 Signal::builder("playback-ended")
+                     .param_types([str::static_type()])
+                     .build(),
++                Signal::builder("video-ready")
++                    .param_types([u64::static_type(), bool::static_type()])
++                    .build(),
+             ]
+         })
+     }
+@@ -178,6 +196,20 @@ impl WidgetImpl for Video {
+                                         object.emit_by_name::<()>("playback-ended", &[&reason]);
+                                         video.unobserve_properties();
+                                     }
++                                    Event::StartFile => video.video_ready.borrow_mut().start_file(),
++                                    Event::FileLoaded => {
++                                        video.video_ready.borrow_mut().file_loaded()
++                                    }
++                                    Event::PlaybackRestart => {
++                                        let load_id =
++                                            video.video_ready.borrow_mut().playback_restarted();
++                                        if let Some(load_id) = load_id {
++                                            object.emit_by_name::<()>(
++                                                "video-ready",
++                                                &[&load_id, &true],
++                                            );
++                                        }
++                                    }
+                                     _ => {}
+                                 });
+                             }
+diff --git a/src/app/video/mod.rs b/src/app/video/mod.rs
+index 68423f9..e1f6a51 100644
+--- a/src/app/video/mod.rs
++++ b/src/app/video/mod.rs
+@@ -1,5 +1,6 @@
+ mod config;
+ mod imp;
++mod ready;
+ 
+ use adw::subclass::prelude::ObjectSubclassIsExt;
+ use gtk::glib::{self, Variant, closure_local, object::ObjectExt};
+@@ -67,6 +68,16 @@ impl Video {
+         );
+     }
+ 
++    pub fn connect_video_ready<T: Fn(u64, bool) + 'static>(&self, callback: T) {
++        self.connect_closure(
++            "video-ready",
++            false,
++            closure_local!(move |_: Video, load_id: u64, ready: bool| {
++                callback(load_id, ready);
++            }),
++        );
++    }
++
+     pub fn send_mpv_command(&self, name: String, args: Vec<String>) {
+         let widget = self.imp();
+ 
+diff --git a/src/app/video/ready.rs b/src/app/video/ready.rs
+new file mode 100644
+index 0000000..ca00ce8
+--- /dev/null
++++ b/src/app/video/ready.rs
+@@ -0,0 +1,88 @@
++use std::collections::VecDeque;
++
++// Tracks which load the web UI is waiting on, so `mpv-event-video-ready` is only
++// sent for the current file and only once per load (seeks also fire PlaybackRestart).
++#[derive(Debug, Default)]
++pub struct VideoReadyState {
++    next_load_id: u64,
++    current_load_id: Option<u64>,
++    pending_load_ids: VecDeque<u64>,
++    active_load_id: Option<u64>,
++    file_loaded_id: Option<u64>,
++    ready_sent_id: Option<u64>,
++}
++
++impl VideoReadyState {
++    pub fn begin_transition(&mut self, loads_file: bool) -> u64 {
++        self.next_load_id += 1;
++        self.current_load_id = Some(self.next_load_id);
++        self.file_loaded_id = None;
++        self.ready_sent_id = None;
++        if loads_file {
++            self.pending_load_ids.push_back(self.next_load_id);
++        }
++        self.next_load_id
++    }
++
++    pub fn start_file(&mut self) {
++        self.active_load_id = self.pending_load_ids.pop_front();
++        self.file_loaded_id = None;
++    }
++
++    pub fn file_loaded(&mut self) {
++        if self.active_load_id == self.current_load_id {
++            self.file_loaded_id = self.active_load_id;
++        }
++    }
++
++    pub fn playback_restarted(&mut self) -> Option<u64> {
++        let load_id = self.current_load_id?;
++        if self.file_loaded_id != Some(load_id) || self.ready_sent_id == Some(load_id) {
++            return None;
++        }
++        self.ready_sent_id = Some(load_id);
++        Some(load_id)
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::VideoReadyState;
++
++    #[test]
++    fn ready_once_per_load() {
++        let mut state = VideoReadyState::default();
++        let id = state.begin_transition(true);
++        state.start_file();
++        assert_eq!(state.playback_restarted(), None);
++        state.file_loaded();
++        assert_eq!(state.playback_restarted(), Some(id));
++        assert_eq!(state.playback_restarted(), None);
++    }
++
++    #[test]
++    fn stale_load_is_ignored() {
++        let mut state = VideoReadyState::default();
++        state.begin_transition(true);
++        let second = state.begin_transition(true);
++
++        state.start_file();
++        state.file_loaded();
++        assert_eq!(state.playback_restarted(), None);
++
++        state.start_file();
++        state.file_loaded();
++        assert_eq!(state.playback_restarted(), Some(second));
++    }
++
++    #[test]
++    fn stop_invalidates_pending_load() {
++        let mut state = VideoReadyState::default();
++        state.begin_transition(true);
++        state.begin_transition(false);
++
++        state.start_file();
++        state.file_loaded();
++        assert_eq!(state.playback_restarted(), None);
++    }
++}
