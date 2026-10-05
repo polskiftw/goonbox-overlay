@@ -2,9 +2,9 @@
 <!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
   <longdescription lang="en">
-    Stremio is a media-center application for discovering and streaming video.
-    This package builds the native Linux shell against system GTK, WebKitGTK,
-    libmpv and Node.js rather than using the upstream Flatpak runtime.
+    Stremio media center using the native Linux GTK4/WebKitGTK/libmpv shell.
+    This package pins a known-good Stremio Web UI release locally so the
+    application does not silently switch to an incompatible hosted UI.
   </longdescription>
   <upstream>
     <bugs-to>https://github.com/Stremio/stremio-linux-shell/issues</bugs-to>

@@ -357,33 +357,48 @@ declare -A GIT_CRATES=(
 	[libmpv2-sys]="https://github.com/Stremio/libmpv2-rs;9e19e7436a933c5eb1ca1b2b16bb9fbe86479576;libmpv2-rs-%commit%/libmpv-sys"
 )
 
-RUST_MIN_VER="1.85.0"
+RUST_MIN_VER="1.88.0"
 
 inherit cargo desktop gnome2-utils xdg
 
-DESCRIPTION="Client for Stremio on Linux"
-HOMEPAGE="https://www.stremio.com/ https://github.com/Stremio/stremio-linux-shell"
+WEBUI_PV="5.0.0-beta.39"
+SHELL_DIST="stremio-linux-shell-${PV}.tar.gz"
+WEBUI_DIST="stremio-web-${WEBUI_PV}.zip"
+
+DESCRIPTION="Stremio media center with native GTK/WebKitGTK shell"
+HOMEPAGE="
+	https://www.stremio.com/
+	https://github.com/Stremio/stremio-linux-shell
+	https://github.com/Stremio/stremio-web
+"
 SRC_URI="
 	https://github.com/Stremio/stremio-linux-shell/archive/refs/tags/v${PV}.tar.gz
-		-> ${P}.tar.gz
+		-> ${SHELL_DIST}
+	https://github.com/Stremio/stremio-web/releases/download/v${WEBUI_PV}/stremio-web.zip
+		-> ${WEBUI_DIST}
 	${CARGO_CRATE_URIS}
 "
 S="${WORKDIR}/stremio-linux-shell-${PV}"
 
-# The Rust shell is GPL-3.0-only.  Upstream bundles server.js without explicit
-# redistribution terms, so keep the package out of mirrors and binary repos.
-LICENSE="GPL-3 all-rights-reserved"
+# Native shell: GPL-3.  Pinned Stremio Web UI: GPL-2.
+# Remaining entries cover bundled Rust crate licenses.
+LICENSE="
+	GPL-3 GPL-2
+	Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD-2 BSD ISC LGPL-2.1
+	MIT MPL-2.0 UoI-NCSA Unicode-3.0 Unlicense
+"
 SLOT="0"
 KEYWORDS="~amd64"
 
-RESTRICT="bindist mirror"
-
 COMMON_DEPEND="
-	>=gui-libs/gtk-4.22.0:4[X,wayland]
-	>=gui-libs/libadwaita-1.9.0:1
+	>=dev-libs/glib-2.84:2
+	>=gui-libs/gtk-4.20:4[X,wayland]
+	>=gui-libs/libadwaita-1.8:1
 	media-libs/libepoxy
 	media-video/mpv:=[libmpv,wayland]
-	>=net-libs/webkit-gtk-2.52.0:6[X,wayland]
+	>=net-libs/webkit-gtk-2.52:6[X,wayland]
+	<net-libs/webkit-gtk-2.54:6[X,wayland]
+	sys-apps/dbus
 "
 DEPEND="${COMMON_DEPEND}"
 RDEPEND="
@@ -392,55 +407,75 @@ RDEPEND="
 	net-libs/nodejs
 "
 BDEPEND="
+	app-arch/unzip
 	dev-util/glib-utils
 	sys-devel/gettext
 	virtual/pkgconfig
 "
 
+QA_FLAGS_IGNORED="usr/libexec/stremio/stremio"
+
 PATCHES=(
-	"${FILESDIR}/${P}-native-paths.patch"
+	"${FILESDIR}/${P}-video-ready.patch"
 )
 
-src_compile() {
-	# Upstream's build.rs compiles a temporary GSettings schema while building.
-	# Keep that generated data inside Portage's temporary directory.
-	local -x XDG_DATA_HOME="${T}/xdg-data"
-	mkdir -p "${XDG_DATA_HOME}" || die
+src_prepare() {
+	default
 
-	cargo_src_compile
+	# Upstream requests GTK 4.22 / libadwaita 1.9 API levels but 1.2.1
+	# builds without APIs newer than GTK 4.20 / libadwaita 1.8.
+	sed -i -e '/^gtk = /s/"v4_22"/"v4_20"/' -e '/^adw = /s/"v1_9"/"v1_8"/' Cargo.toml || die
+	grep -q '"v4_20"' Cargo.toml && grep -q '"v1_8"' Cargo.toml || die
+
+	# A system install uses the system locale tree, not the source directory.
+	sed -i -e 's|concat!(env!("CARGO_MANIFEST_DIR"), "/po")|"/usr/share/locale"|' src/config.rs || die
+	grep -q '"/usr/share/locale"' src/config.rs || die
+
+	# build.rs otherwise writes and compiles the GSettings schema below the
+	# build user's data directory. Portage installs it system-wide below.
+	sed -i -e '/^[[:space:]]*setup_schemas("/d' build.rs || die
+	grep -q '^[[:space:]]*setup_schemas("' build.rs && die
 }
 
 src_install() {
 	exeinto /usr/libexec/stremio
-	newexe "$(cargo_target_dir)/stremio-linux-shell" stremio
+	newexe "$(cargo_target_dir)"/stremio-linux-shell stremio
 
 	insinto /usr/libexec/stremio
 	doins data/server.js
 
+	# The launcher serves the pinned Web UI automatically on loopback and then
+	# starts the native shell pointed at it. Passing --url explicitly bypasses
+	# the pinned UI for debugging/testing newer releases.
 	newbin "${FILESDIR}/stremio" stremio
 
-	doicon -s scalable data/icons/com.stremio.Stremio.svg
-	domenu data/com.stremio.Stremio.desktop
-
-	insinto /usr/share/metainfo
-	doins data/com.stremio.Stremio.metainfo.xml
-
-	insinto /usr/share/dbus-1/services
-	doins data/com.stremio.Stremio.service
-
-	insinto /usr/share/glib-2.0/schemas
-	doins data/com.stremio.Stremio.gschema.xml
+	insinto /usr/share/stremio/webui
+	doins -r "${WORKDIR}"/build/*
 
 	local po lang
 	for po in po/*.po; do
 		lang=${po#po/}
 		lang=${lang%.po}
-		mkdir -p "${ED}/usr/share/locale/${lang}/LC_MESSAGES" || die
-		msgfmt -o "${ED}/usr/share/locale/${lang}/LC_MESSAGES/stremio.mo" "${po}" || die
+		msgfmt -o "${T}/${lang}.mo" "${po}" || die
+		insinto "/usr/share/locale/${lang}/LC_MESSAGES"
+		newins "${T}/${lang}.mo" stremio.mo
 	done
 
+	insinto /usr/share/glib-2.0/schemas
+	doins data/com.stremio.Stremio.gschema.xml
+
+	domenu data/com.stremio.Stremio.desktop
+	insinto /usr/share/metainfo
+	doins data/com.stremio.Stremio.metainfo.xml
 	doman data/stremio.1
 	dodoc README.md
+
+	local service="${T}/com.stremio.Stremio.service"
+	sed -e 's|/app/bin/stremio|/usr/bin/stremio|' data/com.stremio.Stremio.service > "${service}" || die
+	insinto /usr/share/dbus-1/services
+	doins "${service}"
+
+	doicon -s scalable data/icons/com.stremio.Stremio.svg
 }
 
 pkg_preinst() {
