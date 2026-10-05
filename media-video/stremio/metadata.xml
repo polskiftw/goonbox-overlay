@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <longdescription lang="en">
+    Stremio media center using the native Linux GTK4/WebKitGTK/libmpv shell.
+    This package pins a known-good Stremio Web UI release locally so the
+    application does not silently switch to an incompatible hosted UI.
+  </longdescription>
+  <upstream>
+    <bugs-to>https://github.com/Stremio/stremio-linux-shell/issues</bugs-to>
+    <changelog>https://github.com/Stremio/stremio-linux-shell/releases</changelog>
+    <remote-id type="github">Stremio/stremio-linux-shell</remote-id>
+  </upstream>
+</pkgmetadata>
