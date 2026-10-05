@@ -5,12 +5,12 @@ on:
   push:
     paths:
       - "games-action/**"
-      - "media-tv/**"
+      - "media-video/**"
       - ".github/workflows/portage-plan.yml"
   pull_request:
     paths:
       - "games-action/**"
-      - "media-tv/**"
+      - "media-video/**"
       - ".github/workflows/portage-plan.yml"
 
 permissions:
@@ -96,7 +96,7 @@ jobs:
           docker rm goonbox-overlay-portage-snapshot
 
 
-  stremio-linux-shell:
+  stremio:
     runs-on: ubuntu-latest
     steps:
       - name: Check out goonbox-overlay
@@ -133,18 +133,11 @@ jobs:
           EOF
 
               mkdir -p /etc/portage/package.accept_keywords
-              cat > /etc/portage/package.accept_keywords/stremio-linux-shell <<EOF
-          =media-tv/stremio-linux-shell-1.2.1 ~amd64
-          >=gui-libs/gtk-4.22.0 ~amd64
-          >=gui-libs/libadwaita-1.9.0 ~amd64
-          EOF
-
-              mkdir -p /etc/portage/package.license
-              echo "=media-tv/stremio-linux-shell-1.2.1 all-rights-reserved" \
-                > /etc/portage/package.license/stremio-linux-shell
+              echo "=media-video/stremio-1.2.1 ~amd64" \
+                > /etc/portage/package.accept_keywords/stremio
 
               mkdir -p /etc/portage/package.use
-              cat > /etc/portage/package.use/stremio-linux-shell <<EOF
+              cat > /etc/portage/package.use/stremio <<EOF
           gui-libs/gtk X wayland
           media-libs/freetype harfbuzz
           media-libs/gst-plugins-base opengl
@@ -158,15 +151,15 @@ jobs:
           EOF
 
               ebuild \
-                /var/db/repos/goonbox-overlay/media-tv/stremio-linux-shell/stremio-linux-shell-1.2.1.ebuild \
+                /var/db/repos/goonbox-overlay/media-video/stremio/stremio-1.2.1.ebuild \
                 manifest
 
               echo "----- STREMIO MANIFEST BEGIN -----"
-              cat /var/db/repos/goonbox-overlay/media-tv/stremio-linux-shell/Manifest
+              cat /var/db/repos/goonbox-overlay/media-video/stremio/Manifest
               echo "----- STREMIO MANIFEST END -----"
 
               emerge --pretend --verbose --tree --with-bdeps=y \
-                =media-tv/stremio-linux-shell-1.2.1
+                =media-video/stremio-1.2.1
             '
 
           docker rm goonbox-overlay-stremio-portage-snapshot
