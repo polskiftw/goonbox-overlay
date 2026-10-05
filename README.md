@@ -31,7 +31,7 @@ Packages from this repository will appear as `::goonbox-overlay`.
 | Package | Description |
 | --- | --- |
 | `games-action/ship-of-harkinian` | Native Linux source build of Ship of Harkinian |
-| `media-tv/stremio-linux-shell` | Native Stremio Linux shell using system GTK, WebKitGTK, libmpv, and Node.js |
+| `media-video/stremio` | Native Stremio Linux shell with a Portage-managed pinned Web UI, system GTK/WebKitGTK, libmpv, and Node.js |
 
 ## Ship of Harkinian
 
