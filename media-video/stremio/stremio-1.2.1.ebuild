@@ -403,11 +403,11 @@ COMMON_DEPEND="
 DEPEND="${COMMON_DEPEND}"
 RDEPEND="
 	${COMMON_DEPEND}
-	!media-tv/stremio-linux-shell
 	net-libs/glib-networking
 	net-libs/nodejs
 "
 BDEPEND="
+	app-arch/unzip
 	dev-util/glib-utils
 	sys-devel/gettext
 	virtual/pkgconfig
@@ -424,17 +424,17 @@ src_prepare() {
 
 	# Upstream requests GTK 4.22 / libadwaita 1.9 API levels but 1.2.1
 	# builds without APIs newer than GTK 4.20 / libadwaita 1.8.
-	sed -i 		-e '/^gtk = /s/"v4_22"/"v4_20"/' 		-e '/^adw = /s/"v1_9"/"v1_8"/' 		Cargo.toml || die
-	grep -q '"v4_20"' Cargo.toml && grep -q '"v1_8"' Cargo.toml 		|| die "lowering gtk/libadwaita API levels failed"
+	sed -i -e '/^gtk = /s/"v4_22"/"v4_20"/' -e '/^adw = /s/"v1_9"/"v1_8"/' Cargo.toml || die
+	grep -q '"v4_20"' Cargo.toml && grep -q '"v1_8"' Cargo.toml || die
 
 	# A system install uses the system locale tree, not the source directory.
-	sed -i 		-e 's|concat!(env!("CARGO_MANIFEST_DIR"), "/po")|"/usr/share/locale"|' 		src/config.rs || die
-	grep -q '"/usr/share/locale"' src/config.rs 		|| die "setting system locale path failed"
+	sed -i -e 's|concat!(env!("CARGO_MANIFEST_DIR"), "/po")|"/usr/share/locale"|' src/config.rs || die
+	grep -q '"/usr/share/locale"' src/config.rs || die
 
 	# build.rs otherwise writes and compiles the GSettings schema below the
 	# build user's data directory. Portage installs it system-wide below.
 	sed -i -e '/^[[:space:]]*setup_schemas("/d' build.rs || die
-	grep -q '^[[:space:]]*setup_schemas("' build.rs 		&& die "removing setup_schemas() call failed"
+	grep -q '^[[:space:]]*setup_schemas("' build.rs && die
 }
 
 src_install() {
@@ -470,9 +470,10 @@ src_install() {
 	doman data/stremio.1
 	dodoc README.md
 
-	sed -e 's|/app/bin/stremio|/usr/bin/stremio|' 		data/com.stremio.Stremio.service > "${T}/com.stremio.Stremio.service" || die
+	local service="${T}/com.stremio.Stremio.service"
+	sed -e 's|/app/bin/stremio|/usr/bin/stremio|' data/com.stremio.Stremio.service > "${service}" || die
 	insinto /usr/share/dbus-1/services
-	doins "${T}/com.stremio.Stremio.service"
+	doins "${service}"
 
 	doicon -s scalable data/icons/com.stremio.Stremio.svg
 }
