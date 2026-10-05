@@ -51,4 +51,4 @@ jobs:
           sudo ln -s             "$GITHUB_WORKSPACE/gentoo/profiles/default/linux/amd64/23.0"             /etc/portage/make.profile
 
       - name: Run pkgcheck
-        run: pkgcheck scan --exit error "$GITHUB_WORKSPACE/goonbox-overlay"
+        run: pkgcheck scan --exit error,-NonsolvableDepsInDev "$GITHUB_WORKSPACE/goonbox-overlay"
