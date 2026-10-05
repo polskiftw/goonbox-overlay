@@ -1,0 +1,169 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const fs = require('fs');
+const http = require('http');
+const path = require('path');
+const { spawn } = require('child_process');
+
+const SHELL = '/usr/libexec/stremio/stremio';
+const WEBROOT = '/usr/share/stremio/webui';
+const HOST = '127.0.0.1';
+const PORT = 11471;
+const WEBUI_URL = `http://${HOST}:${PORT}/`;
+
+if (fs.existsSync('/dev/nvidia0') && !process.env.GSK_RENDERER) {
+  process.env.GSK_RENDERER = 'opengl';
+}
+
+process.env.SERVER_PATH ||= '/usr/libexec/stremio/server.js';
+process.env.ANV_DEBUG ||= 'video-decode,video-encode';
+
+const args = process.argv.slice(2);
+const hasExplicitUrl = args.some((arg) => arg === '--url' || arg.startsWith('--url='));
+const noUiNeeded =
+  args.includes('--help') ||
+  args.includes('-h') ||
+  args.includes('--version') ||
+  args.includes('-V');
+
+function runShell(shellArgs, server = null) {
+  const child = spawn(SHELL, shellArgs, {
+    stdio: 'inherit',
+    env: process.env,
+  });
+
+  let finished = false;
+  const finish = (code) => {
+    if (finished) return;
+    finished = true;
+
+    if (server) {
+      server.close(() => process.exit(code));
+      setTimeout(() => process.exit(code), 250).unref();
+    } else {
+      process.exit(code);
+    }
+  };
+
+  child.on('error', (err) => {
+    console.error(`stremio: failed to start native shell: ${err.message}`);
+    finish(127);
+  });
+
+  child.on('exit', (code, signal) => {
+    if (signal) {
+      const signalExit = { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 }[signal] || 1;
+      finish(signalExit);
+    } else {
+      finish(code ?? 1);
+    }
+  });
+
+  for (const signal of ['SIGHUP', 'SIGINT', 'SIGTERM']) {
+    process.on(signal, () => {
+      if (!child.killed) child.kill(signal);
+    });
+  }
+}
+
+if (hasExplicitUrl || noUiNeeded) {
+  runShell(args);
+  return;
+}
+
+const mime = new Map([
+  ['.css', 'text/css; charset=utf-8'],
+  ['.html', 'text/html; charset=utf-8'],
+  ['.ico', 'image/x-icon'],
+  ['.jpeg', 'image/jpeg'],
+  ['.jpg', 'image/jpeg'],
+  ['.js', 'text/javascript; charset=utf-8'],
+  ['.json', 'application/json; charset=utf-8'],
+  ['.png', 'image/png'],
+  ['.svg', 'image/svg+xml'],
+  ['.wasm', 'application/wasm'],
+  ['.webp', 'image/webp'],
+  ['.woff', 'font/woff'],
+  ['.woff2', 'font/woff2'],
+]);
+
+function streamFile(req, res, filePath, size, cacheable) {
+  res.writeHead(200, {
+    'Content-Type': mime.get(path.extname(filePath).toLowerCase()) || 'application/octet-stream',
+    'Content-Length': size,
+    'Cache-Control': cacheable ? 'public, max-age=31536000, immutable' : 'no-cache',
+  });
+
+  if (req.method === 'HEAD') {
+    res.end();
+    return;
+  }
+
+  fs.createReadStream(filePath).pipe(res);
+}
+
+function sendFile(req, res, filePath) {
+  fs.stat(filePath, (err, stat) => {
+    if (!err && stat.isFile()) {
+      streamFile(req, res, filePath, stat.size, path.basename(filePath) !== 'index.html');
+      return;
+    }
+
+    const indexPath = path.join(WEBROOT, 'index.html');
+    fs.stat(indexPath, (indexErr, indexStat) => {
+      if (indexErr || !indexStat.isFile()) {
+        res.writeHead(404);
+        res.end('Not found\n');
+        return;
+      }
+
+      streamFile(req, res, indexPath, indexStat.size, false);
+    });
+  });
+}
+
+const server = http.createServer((req, res) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405, { Allow: 'GET, HEAD' });
+    res.end();
+    return;
+  }
+
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(req.url, WEBUI_URL).pathname);
+  } catch {
+    res.writeHead(400);
+    res.end('Bad request\n');
+    return;
+  }
+
+  const relative = pathname.replace(/^\/+/, '') || 'index.html';
+  const candidate = path.resolve(WEBROOT, relative);
+  const rootPrefix = WEBROOT.endsWith(path.sep) ? WEBROOT : WEBROOT + path.sep;
+
+  if (candidate !== WEBROOT && !candidate.startsWith(rootPrefix)) {
+    res.writeHead(403);
+    res.end('Forbidden\n');
+    return;
+  }
+
+  sendFile(req, res, candidate);
+});
+
+server.once('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    // Another Stremio instance may already own the pinned Web UI server.
+    runShell(['--url', WEBUI_URL, ...args]);
+    return;
+  }
+
+  console.error(`stremio: failed to start local Web UI server: ${err.message}`);
+  process.exit(1);
+});
+
+server.listen(PORT, HOST, () => {
+  runShell(['--url', WEBUI_URL, ...args], server);
+});
