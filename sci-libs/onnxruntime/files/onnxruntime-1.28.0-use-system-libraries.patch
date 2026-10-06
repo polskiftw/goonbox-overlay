@@ -38,6 +38,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  endif()
 @@ -87,7 +87,7 @@ if (onnxruntime_BUILD_BENCHMARKS)
      URL ${DEP_URL_google_benchmark}
+     URL_HASH SHA1=${DEP_SHA1_google_benchmark}
      EXCLUDE_FROM_ALL
 -    FIND_PACKAGE_ARGS NAMES benchmark
 +    FIND_PACKAGE_ARGS NAMES benchmark REQUIRED
@@ -46,6 +47,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  endif()
 @@ -105,7 +105,7 @@ if(onnxruntime_USE_MIMALLOC)
      URL ${DEP_URL_mimalloc}
+     URL_HASH SHA1=${DEP_SHA1_mimalloc}
      EXCLUDE_FROM_ALL
 -    FIND_PACKAGE_ARGS NAMES mimalloc
 +    FIND_PACKAGE_ARGS NAMES mimalloc REQUIRED
@@ -197,6 +199,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
 +++ b/cmake/external/wil.cmake
 @@ -8,7 +8,7 @@ onnxruntime_fetchcontent_declare(
    URL ${DEP_URL_microsoft_wil}
+   URL_HASH SHA1=${DEP_SHA1_microsoft_wil}
    EXCLUDE_FROM_ALL
 -  FIND_PACKAGE_ARGS NAMES wil
 +  FIND_PACKAGE_ARGS NAMES wil REQUIRED
@@ -221,7 +224,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  # ---  Determine target processor
 @@ -86,7 +86,7 @@ endif()
  onnxruntime_fetchcontent_declare(googlexnnpack URL ${DEP_URL_googlexnnpack} URL_HASH SHA1=${DEP_SHA1_googlexnnpack}
-                      PATCH_COMMAND ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/patches/xnnpack/AddEmscriptenAndIosSupport.patch
+                      PATCH_COMMAND ${Patch_EXECUTABLE} --binary --ignore-whitespace -p1 < ${PROJECT_SOURCE_DIR}/patches/xnnpack/AddEmscriptenAndIosSupport.patch
  		     EXCLUDE_FROM_ALL
 -		     FIND_PACKAGE_ARGS NAMES xnnpack
 +		     FIND_PACKAGE_ARGS NAMES xnnpack REQUIRED
