@@ -25,4 +25,4 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  
      # Note - -fsanitize=undefined isn't currently working with g++ and cmake
      # if you go build from the old makefile in Test/GccTest, it does work
- 
+
