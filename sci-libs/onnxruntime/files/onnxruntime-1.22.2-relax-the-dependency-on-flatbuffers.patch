@@ -51,8 +51,6 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  #include "OperatorFieldTypes_generated.h"
  
  namespace dml {
- namespace ir {
- namespace operatorFieldTypes {
 --- a/onnxruntime/core/providers/dml/DmlExecutionProvider/src/External/DirectMLHelpers/OperatorFieldTypes_generated.h
 +++ b/onnxruntime/core/providers/dml/DmlExecutionProvider/src/External/DirectMLHelpers/OperatorFieldTypes_generated.h
 @@ -6,13 +6,6 @@
