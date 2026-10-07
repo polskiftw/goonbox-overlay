@@ -7,7 +7,7 @@ inherit desktop qmake-utils xdg
 
 DESCRIPTION="Convert VR videos to normal flat videos using a virtual camera"
 HOMEPAGE="https://vongoob9.gitlab.io/vr2normal/ https://gitlab.com/vongooB9/vr2normal"
-SRC_URI="https://gitlab.com/vongooB9/vr2normal/-/archive/${PV}/${P}.tar.gz"
+SRC_URI="https://gitlab.com/vongooB9/vr2normal/-/archive/${PV}/${P}.tar.bz2"
 
 LICENSE="GPL-3+"
 SLOT="0"
