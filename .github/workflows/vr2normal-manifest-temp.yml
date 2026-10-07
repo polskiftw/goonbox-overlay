@@ -1,0 +1,23 @@
+name: vr2normal manifest helper
+
+on:
+  push:
+    branches:
+      - fix-vr2normal-src-uri
+
+permissions:
+  contents: read
+
+jobs:
+  checksum:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and checksum release source
+        run: |
+          set -euxo pipefail
+          curl -L --fail --retry 3 -o vr2normal-3.6.tar.gz \
+            https://gitlab.com/vongooB9/vr2normal/-/archive/3.6/vr2normal-3.6.tar.gz
+          stat -c 'SIZE %s' vr2normal-3.6.tar.gz
+          b2sum vr2normal-3.6.tar.gz
+          sha512sum vr2normal-3.6.tar.gz
+          tar -tzf vr2normal-3.6.tar.gz | head -n 8
