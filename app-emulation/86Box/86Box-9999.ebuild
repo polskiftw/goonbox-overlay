@@ -21,7 +21,7 @@ DEPEND="
 	dev-libs/libserialport
 	media-libs/freetype:2=
 	media-libs/libpng:=
-	media-libs/libsdl2
+	media-libs/libsdl3
 	media-libs/libsndfile
 	media-libs/openal
 	media-libs/rtmidi
@@ -58,8 +58,6 @@ src_configure() {
 
 	local mycmakeargs=(
 		-DCPPTHREADS="$(usex threads)"
-		# Upstream development builds default to SDL3; keep Gentoo's SDL2 backend.
-		-DSDL2="ON"
 		# Never allow CMake to fetch untracked dependencies outside src_unpack.
 		-DFETCHCONTENT_FULLY_DISCONNECTED="ON"
 		-DLIBRASHADER_STATIC="OFF"
