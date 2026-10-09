@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<longdescription lang="en">
+		Upstream's complete collection of BIOS and device firmware for 86Box,
+		tracked live from the ROM repository's master branch. The ROM files
+		are owned by their original copyright holders and are installed into
+		86Box's system ROM search path.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">86Box/roms</remote-id>
+	</upstream>
+</pkgmetadata>
