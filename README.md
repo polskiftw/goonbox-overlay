@@ -32,6 +32,8 @@ Packages from this repository will appear as `::goonbox-overlay`.
 | --- | --- |
 | `games-action/ship-of-harkinian` | Native Linux source build of Ship of Harkinian |
 | `media-video/stremio` | Native Stremio Linux shell with a Portage-managed pinned Web UI, system GTK/WebKitGTK, libmpv, and Node.js |
+| `app-emulation/86Box-9999` | Live upstream 86Box emulator with Gentoo 6.0 USE defaults and an optional ROM dependency |
+| `app-emulation/86Box-roms-9999` | Live firmware ROM collection installed into the system ROM search path |
 
 ## Ship of Harkinian
 
@@ -99,6 +101,69 @@ application-data directory.
 
 The repository never contains an Ocarina of Time ROM or Nintendo-derived game
 assets.
+
+## 86Box: live emulator and ROM set
+
+The overlay provides `app-emulation/86Box-9999`, adapted from Gentoo's
+official 6.0 ebuild to track 86Box's `master` branch through `git-r3`.
+It preserves all original USE defaults. The only additional USE flag is
+`roms` (disabled by default), which adds a runtime dependency on the
+separate `app-emulation/86Box-roms-9999` ebuild.
+
+The ROM package tracks `86Box/roms` `master`, fetches the original
+collection directly during Portage's Git unpack phase, and installs it into
+`/usr/share/86Box/roms`. Each rebuild replaces the Portage-managed ROM
+files, including tracking additions, renames, and removals. ROM binaries
+are **not** stored in this overlay.
+
+Both packages are unkeyworded live ebuilds. To opt in, add to
+`/etc/portage/package.accept_keywords/86box`:
+
+```text
+=app-emulation/86Box-9999::goonbox-overlay **
+=app-emulation/86Box-roms-9999::goonbox-overlay **
+```
+
+To enable the experimental hardware and install ROMs automatically, add
+to `/etc/portage/package.use/86box`:
+
+```text
+app-emulation/86Box experimental roms
+```
+
+The ROMs have no single permissive redistribution license: upstream
+notes that the files belong to their respective copyright holders.
+Accept this license only for the ROM package, for local use, in
+`/etc/portage/package.license/86box`:
+
+```text
+app-emulation/86Box-roms all-rights-reserved
+```
+
+Then install the emulator and its optional ROM dependency:
+
+```sh
+emerge --sync
+emerge -av =app-emulation/86Box-9999
+```
+
+`emerge --sync` updates the **overlay**, not automatically the installed
+source revisions from upstream. To explicitly refresh both live packages
+and remove outdated Portage-owned ROMs:
+
+```sh
+emerge -1av =app-emulation/86Box-9999 =app-emulation/86Box-roms-9999
+```
+
+Alternatively, `app-portage/smart-live-rebuild` can detect which
+installed Git-backed live packages have new upstream commits and rebuild
+only those. It does not run automatically unless you schedule it.
+
+Since upstream 7.0 development defaults to SDL3, the ebuild explicitly
+keeps the SDL2 frontend used by Gentoo 6.0; the original SDL2 dependency
+therefore remains valid. Current upstream CMake installs desktop assets
+itself, unlike the released 6.0 tree. Changes to upstream dependencies or
+build options may require future updates to this live ebuild.
 
 ## Repository policy
 
