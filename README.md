@@ -122,6 +122,7 @@ Both packages are unkeyworded live ebuilds. To opt in, add to
 ```text
 =app-emulation/86Box-9999::goonbox-overlay **
 =app-emulation/86Box-roms-9999::goonbox-overlay **
+media-libs/libsdl3 ~amd64
 ```
 
 To enable the experimental hardware and install ROMs automatically, add
@@ -159,11 +160,13 @@ Alternatively, `app-portage/smart-live-rebuild` can detect which
 installed Git-backed live packages have new upstream commits and rebuild
 only those. It does not run automatically unless you schedule it.
 
-Since upstream 7.0 development defaults to SDL3, the ebuild explicitly
-keeps the SDL2 frontend used by Gentoo 6.0; the original SDL2 dependency
-therefore remains valid. Current upstream CMake installs desktop assets
-itself, unlike the released 6.0 tree. Changes to upstream dependencies or
-build options may require future updates to this live ebuild.
+Upstream development now defaults to SDL3, and the live ebuild follows
+that upstream choice. The ebuild uses system `media-libs/libsdl3`, without
+forcing the old SDL2 backend or adding a new USE flag. Gentoo currently
+keywords SDL3 as `~amd64`; stable-profile users may need to accept that
+keyword separately. Current upstream CMake installs desktop assets itself,
+unlike the released 6.0 tree. Changes to upstream dependencies or build
+options may require future updates to this live ebuild.
 
 ## Repository policy
 
