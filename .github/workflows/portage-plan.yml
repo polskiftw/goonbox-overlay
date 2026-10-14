@@ -44,6 +44,17 @@ jobs:
           patch --dry-run -d "$workdir" -p1 < \
             games-action/ship-of-harkinian/files/ship-of-harkinian-9.2.3-no-network.patch
 
+      - name: Validate Ship live no-network patch
+        run: |
+          set -euxo pipefail
+          workdir="$(mktemp -d)"
+          mkdir -p "$workdir/soh"
+          curl -fsSL \
+            "https://raw.githubusercontent.com/HarbourMasters/Shipwright/develop/soh/CMakeLists.txt" \
+            -o "$workdir/soh/CMakeLists.txt"
+          patch --dry-run -d "$workdir" -p1 < \
+            games-action/ship-of-harkinian/files/ship-of-harkinian-live-no-network.patch
+
       - name: Resolve package with Portage in Gentoo
         run: |
           docker pull gentoo/portage:latest
