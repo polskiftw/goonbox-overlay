@@ -171,8 +171,8 @@ src_unpack() {
 	_fetchcontent_checkout "${S}/torch/CMakeLists.txt" tinyxml2 torch-tinyxml2 torch-tinyxml2
 	_fetchcontent_checkout "${S}/torch/CMakeLists.txt" zlib torch-zlib torch-zlib
 
-	# libultraship downloads stb_image.h directly rather than using
-	# FetchContent.  Preserve the exact revision named by current develop.
+	# libultraship references stb_image.h outside FetchContent. Fetch its
+	# pinned revision now; src_configure preloads CMake's verified cache.
 	stb_commit=$(sed -n -E \
 		's|.*github.com/nothings/stb/raw/([0-9a-fA-F]{40})/stb_image\.h.*|\1|p' \
 		"${common_cmake}")
@@ -209,6 +209,21 @@ src_configure() {
 	python_setup
 	CMAKE_BUILD_TYPE="Release"
 
+	# libultraship accepts a verified stb_image.h already in its CMake
+	# build tree. Preseed the file fetched by Portage during src_unpack
+	# and fail on a checksum mismatch instead of falling back to network.
+	local common_cmake="${S}/libultraship/cmake/dependencies/common.cmake"
+	local stb_expected_hash stb_actual_hash
+	stb_expected_hash=$(sed -n -E 's|^[[:space:]]*set\(stb_expected_hash[[:space:]]+([[:xdigit:]]{64})\).*|\1|p' "${common_cmake}")
+	[[ ${stb_expected_hash} =~ ^[[:xdigit:]]{64}$ ]] ||
+		die "Could not determine libultraship stb_image.h SHA256"
+	stb_actual_hash=$(sha256sum "${WORKDIR}/stb/stb_image.h") || die
+	[[ ${stb_actual_hash%% *} == "${stb_expected_hash}" ]] ||
+		die "Pre-fetched stb_image.h hash mismatch; refusing network fallback"
+	: "${BUILD_DIR:=${S}_build}"
+	mkdir -p "${BUILD_DIR}/_deps/stb" || die
+	cp "${WORKDIR}/stb/stb_image.h" "${BUILD_DIR}/_deps/stb/stb_image.h" || die
+
 	local mycmakeargs=(
 		-DPython3_EXECUTABLE="${PYTHON}"
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/libexec/${PN}"
@@ -232,7 +247,6 @@ src_configure() {
 		-DFETCHCONTENT_SOURCE_DIR_TINYXML2="${WORKDIR}/torch-tinyxml2"
 		-DFETCHCONTENT_SOURCE_DIR_ZLIB="${WORKDIR}/torch-zlib"
 
-		-DSTB_IMAGE_HEADER="${WORKDIR}/stb/stb_image.h"
 		-DGAMECONTROLLERDB_FILE="${WORKDIR}/gamecontrollerdb/gamecontrollerdb.txt"
 
 		-DSTORM_SKIP_INSTALL=ON
