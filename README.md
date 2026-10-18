@@ -33,7 +33,6 @@ Packages from this repository will appear as `::goonbox-overlay`.
 | `games-action/ship-of-harkinian-9999` | Live native Linux build of Ship of Harkinian, tracking upstream `develop` |
 | `app-emulation/86Box-9999` | Live 86Box emulator following upstream `master` |
 | `app-emulation/86Box-roms-9999` | Upstream ROM collection, installed into 86Box's system ROM path |
-| `media-video/vr2normal` | Source build of VR2Normal for converting VR footage to flat video |
 
 ## Ship of Harkinian (live)
 
@@ -121,14 +120,6 @@ keywords SDL3 as `~amd64`; stable-profile users may need to accept that
 keyword separately. Current upstream CMake installs desktop assets itself,
 unlike the released 6.0 tree. Changes to upstream dependencies or build
 options may require future updates to this live ebuild.
-
-## VR2Normal
-
-`media-video/vr2normal-3.6` builds the upstream VR-to-flat-video converter from a release archive using Qt 6. It is keyworded `~amd64`; stable-profile users may need to accept that keyword.
-
-```sh
-emerge -av media-video/vr2normal
-```
 
 ## Repository policy
 
