@@ -1,16 +1,14 @@
-name: Portage plan
+name: Live Portage plan
 
 on:
   workflow_dispatch:
   push:
     paths:
       - "games-action/**"
-      - "media-video/**"
       - ".github/workflows/portage-plan.yml"
   pull_request:
     paths:
       - "games-action/**"
-      - "media-video/**"
       - ".github/workflows/portage-plan.yml"
 
 permissions:
@@ -21,28 +19,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ship-of-harkinian:
+  ship-of-harkinian-live:
     runs-on: ubuntu-latest
     steps:
       - name: Check out goonbox-overlay
         uses: actions/checkout@v5
-
-      - name: Validate Ship no-network patch
-        run: |
-          set -euxo pipefail
-          workdir="$(mktemp -d)"
-          mkdir -p "$workdir/libultraship/cmake/dependencies" "$workdir/soh"
-
-          curl -fsSL \
-            "https://raw.githubusercontent.com/kenix3/libultraship/fdcaf6336776d24a6408d016b0a52243f108f250/cmake/dependencies/common.cmake" \
-            -o "$workdir/libultraship/cmake/dependencies/common.cmake"
-
-          curl -fsSL \
-            "https://raw.githubusercontent.com/HarbourMasters/Shipwright/cb71e22a79bc5d1f688fa881795bbd93094895fc/soh/CMakeLists.txt" \
-            -o "$workdir/soh/CMakeLists.txt"
-
-          patch --dry-run -d "$workdir" -p1 < \
-            games-action/ship-of-harkinian/files/ship-of-harkinian-9.2.3-no-network.patch
 
       - name: Validate Ship live no-network patch
         run: |
@@ -92,85 +73,17 @@ jobs:
           EOF
 
               mkdir -p /etc/portage/package.accept_keywords
-              echo "=games-action/ship-of-harkinian-9.2.3 ~amd64" \
+              echo "=games-action/ship-of-harkinian-9999::goonbox-overlay **" \
                 > /etc/portage/package.accept_keywords/ship-of-harkinian
 
               mkdir -p /etc/portage/package.license
-              echo "=games-action/ship-of-harkinian-9.2.3 all-rights-reserved" \
+              echo "=games-action/ship-of-harkinian-9999::goonbox-overlay all-rights-reserved" \
                 > /etc/portage/package.license/ship-of-harkinian
 
               emerge --info
               emerge --pretend --verbose --tree --with-bdeps=y \
-                =games-action/ship-of-harkinian-9.2.3
+                =games-action/ship-of-harkinian-9999
             '
 
           docker rm goonbox-overlay-portage-snapshot
 
-
-  stremio:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out goonbox-overlay
-        uses: actions/checkout@v5
-
-      - name: Generate Stremio Manifest and resolve package with Portage
-        run: |
-          docker pull gentoo/portage:latest
-          docker pull gentoo/stage3:latest
-
-          docker create \
-            --name goonbox-overlay-stremio-portage-snapshot \
-            gentoo/portage:latest /bin/true
-
-          docker run --rm \
-            --volumes-from goonbox-overlay-stremio-portage-snapshot \
-            -v "$GITHUB_WORKSPACE:/work/goonbox-overlay" \
-            gentoo/stage3:latest \
-            /bin/bash -euxo pipefail -c '
-              ln -s /work/goonbox-overlay /var/db/repos/goonbox-overlay
-
-              rm -rf /etc/portage/repos.conf
-              mkdir -p /etc/portage/repos.conf
-              cat > /etc/portage/repos.conf/ci.conf <<EOF
-          [DEFAULT]
-          main-repo = gentoo
-
-          [gentoo]
-          location = /var/db/repos/gentoo
-
-          [goonbox-overlay]
-          location = /var/db/repos/goonbox-overlay
-          masters = gentoo
-          EOF
-
-              mkdir -p /etc/portage/package.accept_keywords
-              echo "=media-video/stremio-1.2.1 ~amd64" \
-                > /etc/portage/package.accept_keywords/stremio
-
-              mkdir -p /etc/portage/package.use
-              cat > /etc/portage/package.use/stremio <<EOF
-          gui-libs/gtk X wayland
-          media-libs/freetype harfbuzz
-          media-libs/gst-plugins-base opengl
-          media-libs/harfbuzz icu
-          media-libs/libglvnd X
-          media-libs/mesa wayland
-          media-libs/vulkan-loader X wayland
-          media-video/mpv libmpv wayland
-          net-libs/webkit-gtk X wayland
-          x11-libs/cairo X
-          EOF
-
-              ebuild \
-                /var/db/repos/goonbox-overlay/media-video/stremio/stremio-1.2.1.ebuild \
-                manifest
-
-              echo "----- STREMIO MANIFEST BEGIN -----"
-              cat /var/db/repos/goonbox-overlay/media-video/stremio/Manifest
-              echo "----- STREMIO MANIFEST END -----"
-
-              emerge --pretend --verbose --tree --with-bdeps=y \
-                =media-video/stremio-1.2.1
-            '
-
-          docker rm goonbox-overlay-stremio-portage-snapshot

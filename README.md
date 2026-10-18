@@ -30,77 +30,31 @@ Packages from this repository will appear as `::goonbox-overlay`.
 
 | Package | Description |
 | --- | --- |
-| `games-action/ship-of-harkinian` | Native Linux source build of Ship of Harkinian |
-| `media-video/stremio` | Native Stremio Linux shell with a Portage-managed pinned Web UI, system GTK/WebKitGTK, libmpv, and Node.js |
-| `app-emulation/86Box-9999` | Live upstream 86Box emulator with Gentoo 6.0 USE defaults and an optional ROM dependency |
-| `app-emulation/86Box-roms-9999` | Live firmware ROM collection installed into the system ROM search path |
+| `games-action/ship-of-harkinian-9999` | Live native Linux build of Ship of Harkinian, tracking upstream `develop` |
+| `app-emulation/86Box-9999` | Live 86Box emulator following upstream `master` |
+| `app-emulation/86Box-roms-9999` | Upstream ROM collection, installed into 86Box's system ROM path |
+| `media-video/vr2normal` | Source build of VR2Normal for converting VR footage to flat video |
 
-## Ship of Harkinian
+## Ship of Harkinian (live)
 
-The current package is `games-action/ship-of-harkinian-9.2.3`.
+The overlay provides `games-action/ship-of-harkinian-9999`, tracking Shipwright's `develop` branch. There is no versioned Ship of Harkinian ebuild in this repository.
 
-The ebuild fetches versioned source from Git because Shipwright's release source has
-nested submodules and additional CMake-managed source dependencies. Every repository
-is pinned to an exact commit, and all network activity is confined to Portage's
-fetch/unpack phase. CMake is run with FetchContent disconnected.
+Git submodules and CMake FetchContent dependencies are fetched during Portage's unpack phase at revisions selected by the checked-out source. Configure and build run with FetchContent disconnected, rather than downloading untracked dependencies during compilation.
 
-Ship of Harkinian is currently keyworded `~amd64`, so amd64 users can opt in
-through the normal Gentoo testing-keyword mechanism:
+Like other Gentoo live ebuilds, `9999` has no `KEYWORDS`. To opt in:
 
 ```sh
-mkdir -p /etc/portage/package.accept_keywords
-echo 'games-action/ship-of-harkinian ~amd64' > \
-    /etc/portage/package.accept_keywords/ship-of-harkinian
-
-mkdir -p /etc/portage/package.license
-echo 'games-action/ship-of-harkinian all-rights-reserved' > \
-    /etc/portage/package.license/ship-of-harkinian
-```
-
-The per-package license acceptance is intentional: Shipwright does not currently
-publish a repository-wide license, so the ebuild records that source conservatively
-instead of guessing a license.
-
-Then install normally:
-
-```sh
-emerge -av games-action/ship-of-harkinian
-```
-
-### Rolling develop build
-
-A live `games-action/ship-of-harkinian-9999` ebuild is also available. It tracks
-upstream Shipwright's `develop` branch and follows the gitlink revisions selected
-there for libultraship and Torch. FetchContent dependencies are fetched during
-`src_unpack` from the revisions declared by the checked-out source, while CMake
-remains fully disconnected from the network.
-
-As a normal Gentoo live ebuild it has no `KEYWORDS`. Opt in explicitly:
-
-```sh
-echo '=games-action/ship-of-harkinian-9999 **' >> \
-    /etc/portage/package.accept_keywords/ship-of-harkinian
-
+mkdir -p /etc/portage/package.accept_keywords /etc/portage/package.license
+echo '=games-action/ship-of-harkinian-9999::goonbox-overlay **' >> /etc/portage/package.accept_keywords/ship-of-harkinian
+echo 'games-action/ship-of-harkinian all-rights-reserved' >> /etc/portage/package.license/ship-of-harkinian
 emerge -av =games-action/ship-of-harkinian-9999
 ```
 
-The stable and live ebuilds coexist in the repository but both use `SLOT="0"`,
-so only one is installed at a time. Once `9999` is accepted it sorts newer than
-9.2.3 and normal world updates may keep the live version installed. To return to
-stable, remove the `9999 **` accept-keywords line and emerge 9.2.3 explicitly.
+The upstream source has no project-wide license, so the ebuild uses `all-rights-reserved` conservatively rather than guessing. The only optional USE flag is `tts` for eSpeak NG text-to-speech.
 
-Optional USE flags:
+The package builds upstream's `NON_PORTABLE` configuration. Portage manages read-only application files under `/usr/libexec/ship-of-harkinian`; writable configuration, saves, mods, and ROM-derived archives remain in the user's application-data directory. No Ocarina of Time ROM or Nintendo-derived game assets are included in the repository.
 
-- `remote-control` — SDL2_net remote-control support.
-- `tts` — Linux text-to-speech support through eSpeak NG.
-
-The package builds upstream's `NON_PORTABLE` configuration. Read-only application
-files are managed by Portage under `/usr/libexec/ship-of-harkinian`; writable
-configuration, saves, mods, and ROM-derived game-data archives remain in the user's
-application-data directory.
-
-The repository never contains an Ocarina of Time ROM or Nintendo-derived game
-assets.
+`emerge --sync` updates the overlay but does not automatically rebuild a live package at newer upstream commits. Use `emerge -1av =games-action/ship-of-harkinian-9999` or `app-portage/smart-live-rebuild` to refresh installed Git-backed sources.
 
 ## 86Box: live emulator and ROM set
 
@@ -167,6 +121,14 @@ keywords SDL3 as `~amd64`; stable-profile users may need to accept that
 keyword separately. Current upstream CMake installs desktop assets itself,
 unlike the released 6.0 tree. Changes to upstream dependencies or build
 options may require future updates to this live ebuild.
+
+## VR2Normal
+
+`media-video/vr2normal-3.6` builds the upstream VR-to-flat-video converter from a release archive using Qt 6. It is keyworded `~amd64`; stable-profile users may need to accept that keyword.
+
+```sh
+emerge -av media-video/vr2normal
+```
 
 ## Repository policy
 
