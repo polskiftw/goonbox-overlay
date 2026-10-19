@@ -1,0 +1,30 @@
+name: 86Box - Portage dependency plan
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app-emulation/86Box/**"
+      - ".github/workflows/plan-86box.yml"
+      - ".github/workflows/portage-plan-common.yml"
+  pull_request:
+    paths:
+      - "app-emulation/86Box/**"
+      - ".github/workflows/plan-86box.yml"
+      - ".github/workflows/portage-plan-common.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plan-86box-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    # Same-repo pull requests already get a push run; avoid duplicate builds.
+    # Fork PRs still run because they do not trigger push CI in this repository.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    uses: ./.github/workflows/portage-plan-common.yml
+    with:
+      package: app-emulation/86Box

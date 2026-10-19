@@ -1,0 +1,30 @@
+name: 86Box - Full Gentoo build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app-emulation/86Box/**"
+      - ".github/workflows/build-86box.yml"
+      - ".github/workflows/live-build-common.yml"
+  pull_request:
+    paths:
+      - "app-emulation/86Box/**"
+      - ".github/workflows/build-86box.yml"
+      - ".github/workflows/live-build-common.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-86box-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    # Same-repo pull requests already get a push run; avoid duplicate builds.
+    # Fork PRs still run because they do not trigger push CI in this repository.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    uses: ./.github/workflows/live-build-common.yml
+    with:
+      target: 86box

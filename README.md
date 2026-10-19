@@ -167,11 +167,13 @@ pkgcheck scan
 pkgdev manifest
 ```
 
-GitHub Actions runs `pkgcheck` on changes and checks Portage dependency
-resolution for both live applications; the Ship of Harkinian job also dry-runs
-its network-blocking patch against upstream. A separate **Live ebuild build**
-workflow can be launched manually for a real Portage compile/install of either
-or both applications; because it builds from source on a fresh Gentoo runner,
-it can take considerable time and GitHub Actions minutes.
+GitHub Actions runs `pkgcheck` on changes. **86Box** and **Ship of Harkinian**
+now have independent Portage dependency-plan and full Gentoo build workflows:
+changing an 86Box ebuild does not start a Ship job, or vice versa. Each
+package's full-build workflow can also be launched manually using GitHub
+Actions > **86Box - Full Gentoo build** or **Ship of Harkinian - Full Gentoo
+build**. Full builds compile and install from source inside a fresh Gentoo
+container and may consume significant runner time. The Ship dependency-plan
+workflow also dry-runs the patch that disables CMake network fetching.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the package-maintenance checklist.

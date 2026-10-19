@@ -1,0 +1,26 @@
+name: Ship of Harkinian - Full Gentoo build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "games-action/ship-of-harkinian/**"
+  pull_request:
+    paths:
+      - "games-action/ship-of-harkinian/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-ship-of-harkinian-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    # Same-repo pull requests already get a push run; avoid duplicate builds.
+    # Fork PRs still run because they do not trigger push CI in this repository.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    uses: ./.github/workflows/live-build-common.yml
+    with:
+      target: ship-of-harkinian
