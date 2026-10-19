@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   pkgcheck:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check out goonbox-overlay
         uses: actions/checkout@v5
@@ -36,6 +36,13 @@ jobs:
       - name: Install pkgcheck
         run: python -m pip install --disable-pip-version-check pkgcheck
 
+      # py-tree-sitter 0.26.0 has a known SIGSEGV in pkgcheck; use the exact
+      # fixed revision shipped in pkgcheck's upstream Dockerfile.
+      - name: Install fixed tree-sitter binding
+        run: |
+          python -m pip install --disable-pip-version-check --force-reinstall --no-deps \
+            "tree-sitter @ git+https://github.com/tree-sitter/py-tree-sitter.git@2e556e540dd4ccce0e24c92d4413ef9ac85284a5"
+
       - name: Configure Portage repositories and profile
         run: |
           sudo mkdir -p /etc/portage/repos.conf
@@ -51,4 +58,4 @@ jobs:
           sudo ln -s             "$GITHUB_WORKSPACE/gentoo/profiles/default/linux/amd64/23.0"             /etc/portage/make.profile
 
       - name: Run pkgcheck
-        run: pkgcheck scan --exit error,-NonsolvableDepsInDev "$GITHUB_WORKSPACE/goonbox-overlay"
+        run: pkgcheck scan --jobs 2 --exit error,-NonsolvableDepsInDev "$GITHUB_WORKSPACE/goonbox-overlay"
