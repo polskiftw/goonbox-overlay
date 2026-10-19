@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<longdescription>
+		Librashader provides RetroArch Slang shader preset processing and native
+		rendering runtimes. Its shared C API is used by 86Box for Vulkan shaders.
+	</longdescription>
+	<use>
+		<flag name="tools">Build the librashader-cli shader tool</flag>
+		<flag name="lto">Enable thin link-time optimization for the Rust library</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">SnowflakePowered/librashader</remote-id>
+	</upstream>
+</pkgmetadata>
