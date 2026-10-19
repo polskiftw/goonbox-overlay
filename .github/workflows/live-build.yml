@@ -79,6 +79,7 @@ jobs:
           media-libs/libsdl2 opengl video
           dev-qt/qtbase opengl
           dev-qt/qttools opengl
+          x11-libs/libxkbcommon X
           EOF
 
               # A fresh stage3 compiles dependencies too; keep RAM use bounded.
