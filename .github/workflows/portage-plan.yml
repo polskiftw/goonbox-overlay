@@ -91,6 +91,12 @@ jobs:
           media-libs/libglvnd X
           media-libs/libsdl2 opengl video
           EOF
+              else
+                mkdir -p /etc/portage/package.use
+                cat > /etc/portage/package.use/graphics-ci <<EOF
+          dev-qt/qtbase opengl
+          dev-qt/qttools opengl
+          EOF
               fi
 
               emerge --info
