@@ -3,6 +3,10 @@ name: Live ebuild build
 # Full Gentoo source builds are expensive. Run manually when an upstream change
 # needs verification beyond pkgcheck and Portage's dependency resolution.
 on:
+  # One-off full-build trigger isolated to this temporary validation branch.
+  push:
+    branches:
+      - ci/live-build-both-20261019
   workflow_dispatch:
     inputs:
       target:
@@ -24,6 +28,11 @@ concurrency:
 
 jobs:
   gentoo-build:
+    name: Compile ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [86box, ship-of-harkinian]
     runs-on: ubuntu-latest
     timeout-minutes: 330
     steps:
@@ -32,7 +41,7 @@ jobs:
 
       - name: Compile selected ebuild(s) in Gentoo
         env:
-          LIVE_TARGET: ${{ inputs.target }}
+          LIVE_TARGET: ${{ matrix.target }}
         run: |
           set -euxo pipefail
           docker pull gentoo/portage:latest
