@@ -33,7 +33,7 @@ DEPEND="
 	qt6? (
 		dev-util/vulkan-headers
 		dev-libs/wayland
-		dev-qt/qtbase:6=[gui,network,opengl,widgets]
+		dev-qt/qtbase:6=[gui,network,opengl,vulkan,widgets]
 		x11-libs/libX11
 		x11-libs/libXi
 		x11-libs/libxkbcommon
