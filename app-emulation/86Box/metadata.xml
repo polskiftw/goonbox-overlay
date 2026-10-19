@@ -10,8 +10,9 @@
 		<flag name="discord">Enable Discord integration</flag>
 		<flag name="experimental">Enable hardware from devbranch, which may be unstable or unusable.</flag>
 		<flag name="fluidsynth">Enable MIDI support through <pkg>media-sound/fluidsynth</pkg>.</flag>
+		<flag name="librashader">Build Qt frontend support for dynamically loaded librashader Vulkan shaders (runtime library is optional).</flag>
 		<flag name="munt">Enable MIDI MT-32 support through <pkg>media-libs/munt-mt32emu</pkg>.</flag>
-		<flag name="new-dynarec">Enable new dynamic recompiler from PCem 15, which should provide an even better emulation speed.</flag>
+		<flag name="soundcanvas">Enable Sound Canvas CLAP host support.</flag>
 		<flag name="roms">Install the full upstream firmware collection using <pkg>app-emulation/86Box-roms</pkg>.</flag>
 		<flag name="vde">Enable virtual networking through <pkg>net-misc/vde</pkg>.</flag>
 	</use>
