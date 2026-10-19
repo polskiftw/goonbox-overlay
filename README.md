@@ -34,6 +34,28 @@ Packages from this repository will appear as `::goonbox-overlay`.
 | `app-emulation/86Box-9999` | Live 86Box emulator following upstream `master` |
 | `app-emulation/86Box-roms-9999` | Upstream ROM collection, installed into 86Box's system ROM path |
 | `media-libs/librashader-0.12.1` | Source-built Vulkan shader runtime for 86Box |
+| `media-gfx/rnote-0.14.2-r1` | GTK4 handwritten notes and infinite-canvas drawing, built from source with offline Cargo dependencies |
+
+## Rnote: source-built drawing and handwriting
+
+`media-gfx/rnote-0.14.2-r1` packages the upstream Rnote 0.14.2 release,
+adapted from the [::stuff overlay](https://github.com/istitov/stuff).
+The RustSec Cargo.lock patch is retained, fixing vulnerable `crossbeam-epoch`
+and `librsvg` crate versions without changing Rnote's application source.
+
+All Cargo crates and the pinned Hayro Git sources are fetched through
+Portage and verified against `Manifest` before the Meson/Cargo build.
+Compilation uses Gentoo's vendored offline Cargo configuration (Rust >= 1.92).
+GTK4 and libadwaita are runtime dependencies; a full GNOME desktop is not required.
+
+To install on a stable amd64 system, accept the testing keyword, then sync and emerge:
+
+```sh
+mkdir -p /etc/portage/package.accept_keywords
+echo 'media-gfx/rnote ~amd64' >> /etc/portage/package.accept_keywords/rnote
+emerge --sync
+emerge -1av =media-gfx/rnote-0.14.2-r1::goonbox-overlay
+```
 
 ## Ship of Harkinian (live)
 
