@@ -59,9 +59,18 @@ The package builds upstream's `NON_PORTABLE` configuration. Portage manages read
 
 The overlay provides `app-emulation/86Box-9999`, adapted from Gentoo's
 official 6.0 ebuild to track 86Box's `master` branch through `git-r3`.
-It preserves all original USE defaults. The only additional USE flag is
-`roms` (disabled by default), which adds a runtime dependency on the
-separate `app-emulation/86Box-roms-9999` ebuild.
+It preserves upstream defaults for the retained Gentoo USE switches. The
+upstream-removed `NEW_DYNAREC` build option is no longer exposed; remove
+`new-dynarec` from any local `package.use` entry. The overlay also exposes:
+
+- `roms` (off): install the separately managed firmware ROM collection.
+- `librashader` (on): compile optional Qt shader support; the librashader
+  runtime library is loaded dynamically if installed separately.
+- `soundcanvas` (on): compile Sound Canvas CLAP host support.
+
+Audio backends follow `openal`: when disabled, 86Box uses FAudio instead.
+The `vde` USE flag now fully controls VDE detection, including on machines
+where its headers happen to be installed.
 
 The ROM package tracks `86Box/roms` `master`, fetches the original
 collection directly during Portage's Git unpack phase, and installs it into
@@ -75,7 +84,6 @@ Both packages are unkeyworded live ebuilds. To opt in, add to
 ```text
 =app-emulation/86Box-9999::goonbox-overlay **
 =app-emulation/86Box-roms-9999::goonbox-overlay **
-media-libs/libsdl3 ~amd64
 ```
 
 To enable the experimental hardware and install ROMs automatically, add
@@ -114,12 +122,12 @@ installed Git-backed live packages have new upstream commits and rebuild
 only those. It does not run automatically unless you schedule it.
 
 Upstream development now defaults to SDL3, and the live ebuild follows
-that upstream choice. The ebuild uses system `media-libs/libsdl3`, without
-forcing the old SDL2 backend or adding a new USE flag. Gentoo currently
-keywords SDL3 as `~amd64`; stable-profile users may need to accept that
-keyword separately. Current upstream CMake installs desktop assets itself,
-unlike the released 6.0 tree. Changes to upstream dependencies or build
-options may require future updates to this live ebuild.
+that upstream choice. The ebuild uses system `media-libs/libsdl3`, explicitly
+disables SDL2, and does not need a separate backend USE flag. Gentoo's SDL3
+3.2 series is stable on amd64; newer SDL3 releases may still be `~amd64`,
+so only unmask them if you specifically need one. Current upstream CMake
+installs desktop assets itself, unlike the released 6.0 tree. Changes to
+upstream dependencies or build options may require future updates.
 
 ## Repository policy
 
@@ -158,5 +166,12 @@ emerge -av app-portage/pkgdev
 pkgcheck scan
 pkgdev manifest
 ```
+
+GitHub Actions runs `pkgcheck` on changes and checks Portage dependency
+resolution for both live applications; the Ship of Harkinian job also dry-runs
+its network-blocking patch against upstream. A separate **Live ebuild build**
+workflow can be launched manually for a real Portage compile/install of either
+or both applications; because it builds from source on a fresh Gentoo runner,
+it can take considerable time and GitHub Actions minutes.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the package-maintenance checklist.

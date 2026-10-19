@@ -1,0 +1,100 @@
+name: Live ebuild build
+
+# Full Gentoo source builds are expensive. Run manually when an upstream change
+# needs verification beyond pkgcheck and Portage's dependency resolution.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Live package(s) to compile and install"
+        required: true
+        default: "86box"
+        type: choice
+        options:
+          - "86box"
+          - "ship-of-harkinian"
+          - "both"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  gentoo-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - name: Check out goonbox-overlay
+        uses: actions/checkout@v5
+
+      - name: Compile selected ebuild(s) in Gentoo
+        env:
+          LIVE_TARGET: ${{ inputs.target }}
+        run: |
+          set -euxo pipefail
+          docker pull gentoo/portage:latest
+          docker pull gentoo/stage3:latest
+
+          docker create --name goonbox-overlay-build-snapshot \
+            gentoo/portage:latest /bin/true
+          trap 'docker rm -f goonbox-overlay-build-snapshot >/dev/null 2>&1 || true' EXIT
+
+          docker run --rm \
+            --volumes-from goonbox-overlay-build-snapshot \
+            -v "$GITHUB_WORKSPACE:/work/goonbox-overlay:ro" \
+            -e LIVE_TARGET \
+            gentoo/stage3:latest \
+            /bin/bash -euxo pipefail -c '
+              ln -s /work/goonbox-overlay /var/db/repos/goonbox-overlay
+
+              rm -rf /etc/portage/repos.conf
+              mkdir -p /etc/portage/repos.conf
+              cat > /etc/portage/repos.conf/ci.conf <<EOF
+          [DEFAULT]
+          main-repo = gentoo
+
+          [gentoo]
+          location = /var/db/repos/gentoo
+
+          [goonbox-overlay]
+          location = /var/db/repos/goonbox-overlay
+          masters = gentoo
+          EOF
+
+              mkdir -p /etc/portage/package.accept_keywords /etc/portage/package.license /etc/portage/package.use
+              cat > /etc/portage/package.accept_keywords/live-overlay <<EOF
+          =app-emulation/86Box-9999::goonbox-overlay **
+          =app-emulation/86Box-roms-9999::goonbox-overlay **
+          =games-action/ship-of-harkinian-9999::goonbox-overlay **
+          EOF
+              cat > /etc/portage/package.license/live-overlay <<EOF
+          games-action/ship-of-harkinian all-rights-reserved
+          app-emulation/86Box-roms all-rights-reserved
+          EOF
+              cat > /etc/portage/package.use/graphics-ci <<EOF
+          media-libs/libglvnd X
+          media-libs/libsdl2 opengl video
+          dev-qt/qtbase opengl
+          dev-qt/qttools opengl
+          x11-libs/libxkbcommon X
+          EOF
+
+              # A fresh stage3 compiles dependencies too; keep RAM use bounded.
+              export MAKEOPTS="-j2"
+              case "${LIVE_TARGET}" in
+                86box)
+                  emerge --noreplace --with-bdeps=y --verbose =app-emulation/86Box-9999
+                  ;;
+                ship-of-harkinian)
+                  emerge --noreplace --with-bdeps=y --verbose =games-action/ship-of-harkinian-9999
+                  ;;
+                both)
+                  emerge --noreplace --with-bdeps=y --verbose \
+                    =app-emulation/86Box-9999 =games-action/ship-of-harkinian-9999
+                  ;;
+                *) echo "Unknown target: ${LIVE_TARGET}" >&2; exit 2 ;;
+              esac
+            '

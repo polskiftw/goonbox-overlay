@@ -13,23 +13,23 @@ HOMEPAGE="https://github.com/86Box/86Box"
 
 LICENSE="GPL-2+"
 SLOT="0"
-IUSE="discord experimental +fluidsynth +munt new-dynarec +openal +qt6 roms +threads vde vnc"
+IUSE="discord experimental +fluidsynth +librashader +munt +openal +qt6 roms +soundcanvas +threads vde vnc"
 
 DEPEND="
-	app-emulation/faudio
 	dev-libs/libevdev
 	dev-libs/libserialport
 	media-libs/freetype:2=
 	media-libs/libpng:=
 	media-libs/libsdl3
 	media-libs/libsndfile
-	media-libs/openal
 	media-libs/rtmidi
 	net-libs/libslirp
 	virtual/zlib:=
 	fluidsynth? ( media-sound/fluidsynth:= )
+	!openal? ( app-emulation/faudio )
 	munt? ( media-libs/munt-mt32emu )
 	openal? ( media-libs/openal )
+	vde? ( net-misc/vde )
 	qt6? (
 		dev-util/vulkan-headers
 		dev-libs/wayland
@@ -43,11 +43,14 @@ DEPEND="
 RDEPEND="${DEPEND}
 	qt6? ( dev-qt/qttranslations:6 )
 	roms? ( app-emulation/86Box-roms )
-	vde? ( net-misc/vde )
 "
 BDEPEND="
 	virtual/pkgconfig
-	qt6? ( kde-frameworks/extra-cmake-modules )
+	qt6? (
+		dev-qt/qttools:6[linguist,opengl]
+		dev-qt/qttranslations:6
+		kde-frameworks/extra-cmake-modules
+	)
 "
 
 src_configure() {
@@ -60,21 +63,26 @@ src_configure() {
 		-DCPPTHREADS="$(usex threads)"
 		# Never allow CMake to fetch untracked dependencies outside src_unpack.
 		-DFETCHCONTENT_FULLY_DISCONNECTED="ON"
+		-DLIBRASHADER="$(usex librashader)"
 		-DLIBRASHADER_STATIC="OFF"
 		-DDEV_BRANCH="$(usex experimental)"
 		-DDISCORD="$(usex discord)"
 		-DDYNAREC="ON"
 		-DFLUIDSYNTH="$(usex fluidsynth)"
-		-DHAS_VDE="$(usex vde "${EPREFIX}/usr/$(get_libdir)/libvdeplug.so" "HAS_VDE-NOTFOUND")"
+		# find_path(HAS_VDE) must not auto-enable VDE with USE=-vde.
+		# An empty defined cache PATH skips its search; the enabled path is
+		# where net-misc/vde installs libvdeplug.h.
+		-DHAS_VDE:PATH="$(usex vde "${EPREFIX}/usr/include" "")"
 		-DMINITRACE="OFF"
 		-DMUNT="$(usex munt)"
 		-DMUNT_EXTERNAL="$(usex munt)"
-		-DNEW_DYNAREC="$(usex new-dynarec)"
 		-DOPENAL="$(usex openal)"
 		-DPREFER_STATIC="OFF"
 		-DQT="$(usex qt6)"
 		-DRELEASE="ON"
 		-DRTMIDI="ON"
+		-DSDL2="OFF"
+		-DSOUNDCANVAS="$(usex soundcanvas)"
 		$(usex qt6 '-DUSE_QT6=ON' '')
 		-DVNC="$(usex vnc)"
 	)

@@ -8,9 +8,6 @@
     required to generate the user's game-data archive.
   </longdescription>
   <use>
-    <flag name="remote-control">
-      Build Ship of Harkinian's SDL2_net remote-control support.
-    </flag>
     <flag name="tts">
       Build Linux text-to-speech support using eSpeak NG.
     </flag>
