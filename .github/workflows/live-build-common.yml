@@ -1,38 +1,19 @@
-name: Live ebuild build
+name: Gentoo live source build (shared)
 
-# Full Gentoo source builds are expensive. Run manually when an upstream change
-# needs verification beyond pkgcheck and Portage's dependency resolution.
 on:
-  # One-off full-build trigger isolated to this temporary validation branch.
-  push:
-    branches:
-      - ci/live-build-both-20261019
-  workflow_dispatch:
+  workflow_call:
     inputs:
       target:
-        description: "Live package(s) to compile and install"
+        description: "86box or ship-of-harkinian"
+        type: string
         required: true
-        default: "86box"
-        type: choice
-        options:
-          - "86box"
-          - "ship-of-harkinian"
-          - "both"
 
 permissions:
   contents: read
 
-concurrency:
-  group: live-build-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   gentoo-build:
-    name: Compile ${{ matrix.target }}
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [86box, ship-of-harkinian]
+    name: Compile ${{ inputs.target }}
     runs-on: ubuntu-latest
     timeout-minutes: 330
     steps:
@@ -41,7 +22,7 @@ jobs:
 
       - name: Compile selected ebuild(s) in Gentoo
         env:
-          LIVE_TARGET: ${{ matrix.target }}
+          LIVE_TARGET: ${{ inputs.target }}
         run: |
           set -euxo pipefail
           docker pull gentoo/portage:latest
@@ -86,7 +67,7 @@ jobs:
               cat > /etc/portage/package.use/graphics-ci <<EOF
           media-libs/libglvnd X
           media-libs/libsdl2 opengl video
-          dev-qt/qtbase opengl
+          dev-qt/qtbase opengl vulkan
           dev-qt/qttools opengl
           x11-libs/libxkbcommon X
           EOF

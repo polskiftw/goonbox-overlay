@@ -1,0 +1,27 @@
+name: 86Box - Portage dependency plan
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app-emulation/86Box/**"
+      - ".github/workflows/plan-86box.yml"
+      - ".github/workflows/portage-plan-common.yml"
+  pull_request:
+    paths:
+      - "app-emulation/86Box/**"
+      - ".github/workflows/plan-86box.yml"
+      - ".github/workflows/portage-plan-common.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plan-86box-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    uses: ./.github/workflows/portage-plan-common.yml
+    with:
+      package: app-emulation/86Box

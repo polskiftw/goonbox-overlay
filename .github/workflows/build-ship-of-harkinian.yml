@@ -1,0 +1,23 @@
+name: Ship of Harkinian - Full Gentoo build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "games-action/ship-of-harkinian/**"
+  pull_request:
+    paths:
+      - "games-action/ship-of-harkinian/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-ship-of-harkinian-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    uses: ./.github/workflows/live-build-common.yml
+    with:
+      target: ship-of-harkinian

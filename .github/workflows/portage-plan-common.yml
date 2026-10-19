@@ -1,41 +1,26 @@
-name: Live Portage plan
+name: Gentoo dependency plan (shared)
 
 on:
-  workflow_dispatch:
-  push:
-    paths:
-      - "games-action/**"
-      - "app-emulation/**"
-      - ".github/workflows/portage-plan.yml"
-  pull_request:
-    paths:
-      - "games-action/**"
-      - "app-emulation/**"
-      - ".github/workflows/portage-plan.yml"
+  workflow_call:
+    inputs:
+      package:
+        description: "Category/package for Gentoo live ebuild"
+        type: string
+        required: true
 
 permissions:
   contents: read
 
-concurrency:
-  group: portage-plan-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  live-ebuilds:
-    name: ${{ matrix.package }}
+  dependency-plan:
+    name: Plan ${{ inputs.package }}
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        package:
-          - games-action/ship-of-harkinian
-          - app-emulation/86Box
     steps:
       - name: Check out goonbox-overlay
         uses: actions/checkout@v5
 
       - name: Validate Ship live no-network patch
-        if: matrix.package == 'games-action/ship-of-harkinian'
+        if: inputs.package == 'games-action/ship-of-harkinian'
         run: |
           set -euxo pipefail
           workdir="$(mktemp -d)"
@@ -48,7 +33,7 @@ jobs:
 
       - name: Resolve live package with Portage in Gentoo
         env:
-          TARGET_PACKAGE: ${{ matrix.package }}
+          TARGET_PACKAGE: ${{ inputs.package }}
         run: |
           docker pull gentoo/portage:latest
           docker pull gentoo/stage3:latest
@@ -94,7 +79,7 @@ jobs:
               else
                 mkdir -p /etc/portage/package.use
                 cat > /etc/portage/package.use/graphics-ci <<EOF
-          dev-qt/qtbase opengl
+          dev-qt/qtbase opengl vulkan
           dev-qt/qttools opengl
           media-libs/libglvnd X
           x11-libs/libxkbcommon X

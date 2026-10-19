@@ -1,0 +1,27 @@
+name: 86Box - Full Gentoo build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "app-emulation/86Box/**"
+      - ".github/workflows/build-86box.yml"
+      - ".github/workflows/live-build-common.yml"
+  pull_request:
+    paths:
+      - "app-emulation/86Box/**"
+      - ".github/workflows/build-86box.yml"
+      - ".github/workflows/live-build-common.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-86box-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    uses: ./.github/workflows/live-build-common.yml
+    with:
+      target: 86box
