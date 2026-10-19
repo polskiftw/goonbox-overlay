@@ -77,6 +77,8 @@ jobs:
               cat > /etc/portage/package.use/graphics-ci <<EOF
           media-libs/libglvnd X
           media-libs/libsdl2 opengl video
+          dev-qt/qtbase opengl
+          dev-qt/qttools opengl
           EOF
 
               # A fresh stage3 compiles dependencies too; keep RAM use bounded.
