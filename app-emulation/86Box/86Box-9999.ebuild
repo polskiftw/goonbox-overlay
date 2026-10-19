@@ -14,6 +14,7 @@ HOMEPAGE="https://github.com/86Box/86Box"
 LICENSE="GPL-2+"
 SLOT="0"
 IUSE="discord experimental +fluidsynth +librashader +munt +openal +qt6 roms +soundcanvas +threads vde vnc"
+REQUIRED_USE="librashader? ( qt6 )"
 
 DEPEND="
 	dev-libs/libevdev
@@ -41,6 +42,7 @@ DEPEND="
 	vnc? ( net-libs/libvncserver )
 "
 RDEPEND="${DEPEND}
+	librashader? ( media-libs/librashader[vulkan] )
 	qt6? ( dev-qt/qttranslations:6 )
 	roms? ( app-emulation/86Box-roms )
 "

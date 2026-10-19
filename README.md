@@ -33,6 +33,7 @@ Packages from this repository will appear as `::goonbox-overlay`.
 | `games-action/ship-of-harkinian-9999` | Live native Linux build of Ship of Harkinian, tracking upstream `develop` |
 | `app-emulation/86Box-9999` | Live 86Box emulator following upstream `master` |
 | `app-emulation/86Box-roms-9999` | Upstream ROM collection, installed into 86Box's system ROM path |
+| `media-libs/librashader-0.12.1` | Source-built Vulkan shader runtime for 86Box |
 
 ## Ship of Harkinian (live)
 
@@ -64,8 +65,8 @@ upstream-removed `NEW_DYNAREC` build option is no longer exposed; remove
 `new-dynarec` from any local `package.use` entry. The overlay also exposes:
 
 - `roms` (off): install the separately managed firmware ROM collection.
-- `librashader` (on): compile optional Qt shader support; the librashader
-  runtime library is loaded dynamically if installed separately.
+- `librashader` (on): compile Qt Vulkan shader support and automatically
+  install `media-libs/librashader[vulkan]`. Requires `qt6`.
 - `soundcanvas` (on): compile Sound Canvas CLAP host support.
 
 Audio backends follow `openal`: when disabled, 86Box uses FAudio instead.
@@ -84,6 +85,7 @@ Both packages are unkeyworded live ebuilds. To opt in, add to
 ```text
 =app-emulation/86Box-9999::goonbox-overlay **
 =app-emulation/86Box-roms-9999::goonbox-overlay **
+media-libs/librashader ~amd64
 ```
 
 To enable the experimental hardware and install ROMs automatically, add
@@ -128,6 +130,23 @@ disables SDL2, and does not need a separate backend USE flag. Gentoo's SDL3
 so only unmask them if you specifically need one. Current upstream CMake
 installs desktop assets itself, unlike the released 6.0 tree. Changes to
 upstream dependencies or build options may require future updates.
+
+## librashader (versioned)
+
+`media-libs/librashader-0.12.1` builds the upstream Rust C API from its
+pinned release source and the crates in upstream's `Cargo.lock`. Portage
+verifies every distfile's checksums and builds offline, with no dependence
+on an unofficial prepacked Rust dependency archive.
+
+Vulkan runtime support is on by default, matching 86Box's shader backend.
+OpenGL is optional; `X`, `wayland`, `lto`, `tools`, and `static-libs`
+are optional as well. The runtime installs `librashader.so`, which 86Box
+loads dynamically when Vulkan shader presets are used. No shader collection
+is bundled.
+
+The versioned librashader ebuild is `~amd64`; on a stable system, accept
+that keyword as shown in the 86Box section above. `USE=-librashader` on
+86Box avoids this dependency entirely.
 
 ## Repository policy
 
