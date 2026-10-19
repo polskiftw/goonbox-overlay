@@ -96,6 +96,8 @@ jobs:
                 cat > /etc/portage/package.use/graphics-ci <<EOF
           dev-qt/qtbase opengl
           dev-qt/qttools opengl
+          media-libs/libglvnd X
+          x11-libs/libxkbcommon X
           EOF
               fi
 
