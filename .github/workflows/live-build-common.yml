@@ -58,6 +58,7 @@ jobs:
               cat > /etc/portage/package.accept_keywords/live-overlay <<EOF
           =app-emulation/86Box-9999::goonbox-overlay **
           =app-emulation/86Box-roms-9999::goonbox-overlay **
+          media-libs/librashader ~amd64
           =games-action/ship-of-harkinian-9999::goonbox-overlay **
           EOF
               cat > /etc/portage/package.license/live-overlay <<EOF

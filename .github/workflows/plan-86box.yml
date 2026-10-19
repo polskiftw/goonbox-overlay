@@ -5,11 +5,13 @@ on:
   push:
     paths:
       - "app-emulation/86Box/**"
+      - "media-libs/librashader/**"
       - ".github/workflows/plan-86box.yml"
       - ".github/workflows/portage-plan-common.yml"
   pull_request:
     paths:
       - "app-emulation/86Box/**"
+      - "media-libs/librashader/**"
       - ".github/workflows/plan-86box.yml"
       - ".github/workflows/portage-plan-common.yml"
 

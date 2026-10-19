@@ -68,6 +68,11 @@ jobs:
               echo "=${TARGET_PACKAGE}-9999::goonbox-overlay **" \
                 > /etc/portage/package.accept_keywords/live-overlay
 
+              # The 86Box default shader runtime is a versioned ~amd64 ebuild.
+              if [[ ${TARGET_PACKAGE} == app-emulation/86Box ]]; then
+                echo "media-libs/librashader ~amd64" >> /etc/portage/package.accept_keywords/live-overlay
+              fi
+
               if [[ ${TARGET_PACKAGE} == games-action/ship-of-harkinian ]]; then
                 mkdir -p /etc/portage/package.license /etc/portage/package.use
                 echo "games-action/ship-of-harkinian all-rights-reserved" \
