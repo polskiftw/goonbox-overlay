@@ -18,6 +18,9 @@ concurrency:
 
 jobs:
   validate:
+    # Same-repo pull requests already get a push run; avoid duplicate builds.
+    # Fork PRs still run because they do not trigger push CI in this repository.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     uses: ./.github/workflows/portage-plan-common.yml
     with:
       package: games-action/ship-of-harkinian
