@@ -47,7 +47,7 @@ RDEPEND="${DEPEND}
 BDEPEND="
 	virtual/pkgconfig
 	qt6? (
-		dev-qt/qttools:6[linguist]
+		dev-qt/qttools:6[linguist,opengl]
 		dev-qt/qttranslations:6
 		kde-frameworks/extra-cmake-modules
 	)
