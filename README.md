@@ -218,3 +218,7 @@ container and may consume significant runner time. The Ship dependency-plan
 workflow also dry-runs the patch that disables CMake network fetching.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the package-maintenance checklist.
+
+## Overlay licensing
+
+Original packaging code, metadata, and patches in this overlay are offered under the **Apache License 2.0** where their contributors hold the applicable rights; see [LICENSE](LICENSE). Upstream projects, imported packaging, and other third-party material remain subject to their own terms. In particular, package `LICENSE` values inside ebuilds describe the **packaged software**, not this overlay, and must not be changed to Apache-2.0 merely because the overlay uses that license.
