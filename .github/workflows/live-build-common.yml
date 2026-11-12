@@ -74,6 +74,14 @@ jobs:
           x11-libs/libxkbcommon X
           EOF
 
+              # Fresh-stage3 defaults are missing these GTK dependency USE flags.
+              if [[ ${LIVE_TARGET} == rnote ]]; then
+                cat >> /etc/portage/package.use/graphics-ci <<EOF
+          media-libs/freetype harfbuzz
+          x11-libs/cairo X
+          EOF
+              fi
+
               # A fresh stage3 compiles dependencies too; keep RAM use bounded.
               export MAKEOPTS="-j2"
               case "${LIVE_TARGET}" in
