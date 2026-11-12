@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       target:
-        description: "86box or ship-of-harkinian"
+        description: "86box, ship-of-harkinian, or rnote"
         type: string
         required: true
 
@@ -59,6 +59,7 @@ jobs:
           =app-emulation/86Box-9999::goonbox-overlay **
           =app-emulation/86Box-roms-9999::goonbox-overlay **
           media-libs/librashader ~amd64
+          media-gfx/rnote ~amd64
           =games-action/ship-of-harkinian-9999::goonbox-overlay **
           EOF
               cat > /etc/portage/package.license/live-overlay <<EOF
@@ -73,6 +74,14 @@ jobs:
           x11-libs/libxkbcommon X
           EOF
 
+              # Fresh-stage3 defaults are missing these GTK dependency USE flags.
+              if [[ ${LIVE_TARGET} == rnote ]]; then
+                cat >> /etc/portage/package.use/graphics-ci <<EOF
+          media-libs/freetype harfbuzz
+          x11-libs/cairo X
+          EOF
+              fi
+
               # A fresh stage3 compiles dependencies too; keep RAM use bounded.
               export MAKEOPTS="-j2"
               case "${LIVE_TARGET}" in
@@ -81,6 +90,9 @@ jobs:
                   ;;
                 ship-of-harkinian)
                   emerge --noreplace --with-bdeps=y --verbose =games-action/ship-of-harkinian-9999
+                  ;;
+                rnote)
+                  emerge --noreplace --with-bdeps=y --verbose media-gfx/rnote::goonbox-overlay
                   ;;
                 both)
                   emerge --noreplace --with-bdeps=y --verbose \

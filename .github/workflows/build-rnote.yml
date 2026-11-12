@@ -1,0 +1,29 @@
+name: Rnote - Full Gentoo build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "media-gfx/rnote/**"
+      - ".github/workflows/build-rnote.yml"
+      - ".github/workflows/live-build-common.yml"
+  pull_request:
+    paths:
+      - "media-gfx/rnote/**"
+      - ".github/workflows/build-rnote.yml"
+      - ".github/workflows/live-build-common.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-rnote-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    # Same-repo pull requests also get a push run, avoiding duplicate builds.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    uses: ./.github/workflows/live-build-common.yml
+    with:
+      target: rnote

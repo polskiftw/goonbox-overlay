@@ -13,8 +13,8 @@ HOMEPAGE="https://github.com/86Box/86Box"
 
 LICENSE="GPL-2+"
 SLOT="0"
-IUSE="discord experimental +fluidsynth +librashader +munt +openal +qt6 roms +soundcanvas +threads vde vnc"
-REQUIRED_USE="librashader? ( qt6 )"
+IUSE="+disasm discord experimental +fluidsynth +librashader +munt +openal +qt6 roms +soundcanvas +threads vde vfio vnc"
+REQUIRED_USE="librashader? ( qt6 ) vfio? ( experimental )"
 
 DEPEND="
 	dev-libs/libevdev
@@ -45,6 +45,7 @@ RDEPEND="${DEPEND}
 	librashader? ( media-libs/librashader[vulkan] )
 	qt6? ( dev-qt/qttranslations:6 )
 	roms? ( app-emulation/86Box-roms )
+	vfio? ( sys-auth/polkit )
 "
 BDEPEND="
 	virtual/pkgconfig
@@ -69,6 +70,7 @@ src_configure() {
 		-DLIBRASHADER_STATIC="OFF"
 		-DDEV_BRANCH="$(usex experimental)"
 		-DDISCORD="$(usex discord)"
+		-DDISASM="$(usex disasm)"
 		-DDYNAREC="ON"
 		-DFLUIDSYNTH="$(usex fluidsynth)"
 		# find_path(HAS_VDE) must not auto-enable VDE with USE=-vde.
@@ -86,6 +88,7 @@ src_configure() {
 		-DSDL2="OFF"
 		-DSOUNDCANVAS="$(usex soundcanvas)"
 		$(usex qt6 '-DUSE_QT6=ON' '')
+		-DVFIO="$(usex vfio)"
 		-DVNC="$(usex vnc)"
 	)
 

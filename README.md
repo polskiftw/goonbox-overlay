@@ -90,6 +90,8 @@ upstream-removed `NEW_DYNAREC` build option is no longer exposed; remove
 - `librashader` (on): compile Qt Vulkan shader support and automatically
   install `media-libs/librashader[vulkan]`. Requires `qt6`.
 - `soundcanvas` (on): compile Sound Canvas CLAP host support.
+- `disasm` (on): build the Zydis-backed Qt memory viewer disassembler; turn it off to omit that feature.
+- `vfio` (off): permit experimental PCI device passthrough. Requires `experimental` and installs a privileged VFIO setup helper and polkit policy.
 
 Audio backends follow `openal`: when disabled, 86Box uses FAudio instead.
 The `vde` USE flag now fully controls VDE detection, including on machines
@@ -116,6 +118,17 @@ to `/etc/portage/package.use/86box`:
 ```text
 app-emulation/86Box experimental roms
 ```
+
+The `experimental` flag alone no longer enables VFIO. If you intentionally
+want PCI passthrough, additionally enable `vfio`:
+
+```text
+app-emulation/86Box experimental vfio
+```
+
+This installs a privileged device setup helper and a polkit authorization
+policy; leave `vfio` off unless you use that functionality. For a smaller Qt
+build, use `-disasm` to omit the bundled memory-viewer disassembler.
 
 The ROMs have no single permissive redistribution license: upstream
 notes that the files belong to their respective copyright holders.
@@ -209,13 +222,17 @@ pkgdev manifest
 ```
 
 GitHub Actions runs `pkgcheck` on changes. **86Box** and **Ship of Harkinian**
-now have independent Portage dependency-plan and full Gentoo build workflows:
-changing an 86Box ebuild does not start a Ship job, or vice versa. Each
-package's full-build workflow can also be launched manually using GitHub
-Actions > **86Box - Full Gentoo build** or **Ship of Harkinian - Full Gentoo
-build**. Full builds compile and install from source inside a fresh Gentoo
-container and may consume significant runner time. The Ship dependency-plan
-workflow also dry-runs the patch that disables CMake network fetching.
+have independent Portage dependency-plan and full Gentoo build workflows:
+changing an 86Box ebuild does not start a Ship job, or vice versa. The Ship
+workflows also react to changes in their shared workflow definitions. Rnote
+has a separate **Rnote - Full Gentoo build** workflow for testing the packaged
+release, including its offline Cargo dependencies.
+
+Each full-build workflow can also be launched manually from GitHub Actions.
+Full builds compile and install from source inside a fresh Gentoo container
+and may consume significant runner time. The Ship dependency-plan workflow
+dry-runs the patch that disables CMake network fetching. The 86Box dependency
+plan additionally checks the `experimental vfio -disasm` USE configuration.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the package-maintenance checklist.
 
