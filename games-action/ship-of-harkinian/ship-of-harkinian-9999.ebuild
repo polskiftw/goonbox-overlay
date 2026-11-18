@@ -10,7 +10,7 @@ PYTHON_COMPAT=( python3_1{2..4} )
 inherit cmake desktop git-r3 python-any-r1 xdg
 
 DESCRIPTION="Native PC port of The Legend of Zelda: Ocarina of Time"
-HOMEPAGE="https://www.shipofharkinian.com/ https://github.com/HarbourMasters/Shipwright"
+HOMEPAGE="https://www.harbourmasters.org/ https://github.com/HarbourMasters/Shipwright"
 
 # Shipwright itself does not publish a repository-wide license.  The remaining
 # entries cover source components bundled into the build.
