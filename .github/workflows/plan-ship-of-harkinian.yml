@@ -5,9 +5,13 @@ on:
   push:
     paths:
       - "games-action/ship-of-harkinian/**"
+      - ".github/workflows/plan-ship-of-harkinian.yml"
+      - ".github/workflows/portage-plan-common.yml"
   pull_request:
     paths:
       - "games-action/ship-of-harkinian/**"
+      - ".github/workflows/plan-ship-of-harkinian.yml"
+      - ".github/workflows/portage-plan-common.yml"
 
 permissions:
   contents: read

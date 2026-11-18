@@ -94,6 +94,13 @@ jobs:
               emerge --info
               emerge --pretend --verbose --tree --with-bdeps=y \
                 "=${TARGET_PACKAGE}-9999"
+
+              # Check the optional VFIO dependency and the -disasm build selection.
+              if [[ ${TARGET_PACKAGE} == app-emulation/86Box ]]; then
+                echo "app-emulation/86Box experimental vfio -disasm" > /etc/portage/package.use/86box-extra-features
+                emerge --pretend --verbose --tree --with-bdeps=y \
+                  "=app-emulation/86Box-9999"
+              fi
             '
 
           docker rm goonbox-overlay-portage-snapshot

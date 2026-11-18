@@ -7,6 +7,7 @@
 		fairly recent system designs based on the PCI bus.
 	</longdescription>
 	<use>
+		<flag name="disasm">Build the Qt memory viewer disassembler from upstream bundled Zydis sources.</flag>
 		<flag name="discord">Enable Discord integration</flag>
 		<flag name="experimental">Enable hardware from devbranch, which may be unstable or unusable.</flag>
 		<flag name="fluidsynth">Enable MIDI support through <pkg>media-sound/fluidsynth</pkg>.</flag>
@@ -14,6 +15,7 @@
 		<flag name="munt">Enable MIDI MT-32 support through <pkg>media-libs/munt-mt32emu</pkg>.</flag>
 		<flag name="soundcanvas">Enable Sound Canvas CLAP host support.</flag>
 		<flag name="roms">Install the full upstream firmware collection using <pkg>app-emulation/86Box-roms</pkg>.</flag>
+		<flag name="vfio">Allow experimental VFIO PCI passthrough, installing the privileged device helper and polkit policy; requires experimental.</flag>
 		<flag name="vde">Enable virtual networking through <pkg>net-misc/vde</pkg>.</flag>
 	</use>
 	<upstream>
