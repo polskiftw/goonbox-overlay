@@ -13,7 +13,7 @@ HOMEPAGE="https://github.com/86Box/86Box"
 
 LICENSE="GPL-2+"
 SLOT="0"
-IUSE="+disasm discord experimental +fluidsynth +librashader +munt +openal +qt6 roms +soundcanvas +threads vde vfio vnc"
+IUSE="+disasm discord experimental +fluidsynth +librashader +munt +openal +qt6 +roms +soundcanvas +threads vde vfio vnc"
 REQUIRED_USE="librashader? ( qt6 ) vfio? ( experimental )"
 
 DEPEND="
