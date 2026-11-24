@@ -1,0 +1,92 @@
+name: Rnote isolated binpkg fixture (do not merge)
+
+on:
+  push:
+    branches:
+      - overlay-validation/rnote-binpkg-do-not-merge-20261124
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rnote-isolated-binpkg-fixture
+  cancel-in-progress: false
+
+jobs:
+  source-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 210
+    steps:
+      - name: Check out exact fixture commit
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Build Rnote from source with signed Gentoo dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=gentoo/stage3:latest
+          portage=gentoo/portage:latest
+          snapshot=goonbox-rnote-portage-snapshot
+          docker pull "$stage"
+          docker pull "$portage"
+          docker image inspect --format '{{.RepoDigests}}' "$stage" "$portage"
+          docker create --name "$snapshot" "$portage" /bin/true
+          trap 'docker rm -f "$snapshot" >/dev/null 2>&1 || true' EXIT
+
+          docker run --rm -i \
+            --volumes-from "$snapshot":ro \
+            -v "$GITHUB_WORKSPACE:/work/goonbox-overlay:ro" \
+            "$stage" /bin/bash -s <<'GENTOO'
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          ln -s /work/goonbox-overlay /var/db/repos/goonbox-overlay
+
+          rm -rf /etc/portage/repos.conf /etc/portage/binrepos.conf
+          mkdir -p /etc/portage/{repos.conf,binrepos.conf,package.accept_keywords,package.use}
+          cat > /etc/portage/repos.conf/ci.conf <<'CONF'
+          [DEFAULT]
+          main-repo = gentoo
+
+          [gentoo]
+          location = /var/db/repos/gentoo
+
+          [goonbox-overlay]
+          location = /var/db/repos/goonbox-overlay
+          masters = gentoo
+          CONF
+          cat > /etc/portage/binrepos.conf/gentoo-ci.conf <<'CONF'
+          [gentoo-official]
+          sync-uri = https://distfiles.gentoo.org/releases/amd64/binpackages/23.0/x86-64/
+          CONF
+          printf '%s\n' '=media-gfx/rnote-0.14.2-r1::goonbox-overlay ~amd64' > /etc/portage/package.accept_keywords/rnote
+          cat > /etc/portage/package.use/graphics-ci <<'CONF'
+          media-libs/libglvnd X
+          media-libs/libsdl2 opengl video
+          dev-qt/qtbase opengl vulkan
+          dev-qt/qttools opengl
+          x11-libs/libxkbcommon X
+          media-libs/freetype harfbuzz
+          x11-libs/cairo X
+          CONF
+          cat >> /etc/portage/make.conf <<'CONF'
+
+          FEATURES="${FEATURES} binpkg-request-signature"
+          MAKEOPTS="-j2"
+          CONF
+
+          emerge --info
+          getuto
+          atom='=media-gfx/rnote-0.14.2-r1::goonbox-overlay'
+          common=(--color=n --verbose --with-bdeps=y --getbinpkg
+            --binpkg-respect-use=y --binpkg-changed-deps=y --usepkg-exclude=media-gfx/rnote)
+
+          emerge "${common[@]}" --pretend --tree "$atom" | tee /tmp/rnote-plan
+          grep -Eq '^\[ebuild[^]]*\][[:space:]]+media-gfx/rnote-0\.14\.2-r1::goonbox-overlay([[:space:]]|$)' /tmp/rnote-plan
+          emerge "${common[@]}" --oneshot "$atom"
+          test -x /usr/bin/rnote
+          test -x /usr/bin/rnote-cli
+          test -s /var/db/pkg/media-gfx/rnote-0.14.2-r1/CONTENTS
+          /usr/bin/rnote-cli --version
+          GENTOO
