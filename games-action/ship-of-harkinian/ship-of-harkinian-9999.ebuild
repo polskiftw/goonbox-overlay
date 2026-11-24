@@ -279,4 +279,13 @@ src_install() {
 	newmenu "${FILESDIR}/ship-of-harkinian.desktop" ship-of-harkinian.desktop
 
 	dodoc README.md
+
+	# soh.o2r includes contributor-created assets. Keep the notices when
+	# present so older upstream revisions can still be built.
+	local notice
+	for notice in ASSETS-LICENSE.md CREDITS.md; do
+		if [[ -f ${notice} ]]; then
+			dodoc "${notice}"
+		fi
+	done
 }
