@@ -1,0 +1,104 @@
+name: 86Box ROMs - Gentoo source install
+
+on:
+  push:
+    paths:
+      - "app-emulation/86Box-roms/**"
+      - ".github/workflows/build-86box-roms.yml"
+  pull_request:
+    paths:
+      - "app-emulation/86Box-roms/**"
+      - ".github/workflows/build-86box-roms.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-86box-roms-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    # Same-repository PRs get their validation from the push event.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Check out overlay
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Resolve and install 86Box ROMs in Gentoo
+        shell: bash
+        run: |
+          set -euo pipefail
+          portage=gentoo/portage:latest
+          stage3=gentoo/stage3:latest
+          snapshot=goonbox-roms-portage-snapshot
+
+          printf 'Overlay commit: %s\n' "$(git rev-parse HEAD)"
+          docker pull "$portage"
+          docker pull "$stage3"
+          docker image inspect --format '{{.RepoTags}} {{.RepoDigests}}' "$portage" "$stage3"
+          docker create --name "$snapshot" "$portage" /bin/true
+          trap 'docker rm -f "$snapshot" >/dev/null 2>&1 || true' EXIT
+
+          docker run --rm -i \
+            --volumes-from "$snapshot":ro \
+            -v "$GITHUB_WORKSPACE:/work/goonbox-overlay:ro" \
+            "$stage3" /bin/bash -s <<'GENTOO'
+          set -euo pipefail
+          export LC_ALL=C MAKEOPTS=-j2
+          ln -s /work/goonbox-overlay /var/db/repos/goonbox-overlay
+          rm -rf /etc/portage/repos.conf
+          mkdir -p /etc/portage/{repos.conf,package.accept_keywords,package.license}
+          cat > /etc/portage/repos.conf/ci.conf <<'CONF'
+          [DEFAULT]
+          main-repo = gentoo
+
+          [gentoo]
+          location = /var/db/repos/gentoo
+
+          [goonbox-overlay]
+          location = /var/db/repos/goonbox-overlay
+          masters = gentoo
+          CONF
+
+          atom='=app-emulation/86Box-roms-9999::goonbox-overlay'
+          printf '%s **\n' "$atom" > /etc/portage/package.accept_keywords/86box-roms
+          printf '%s all-rights-reserved\n' "$atom" > /etc/portage/package.license/86box-roms
+          opts=(--color=n --verbose --with-bdeps=y --usepkg=n --getbinpkg=n --buildpkg=n)
+          plan=$(mktemp)
+          emerge "${opts[@]}" --pretend --tree "$atom" | tee "$plan"
+          grep -Eq '^\[ebuild[^]]*\][[:space:]]+app-emulation/86Box-roms-9999::goonbox-overlay([[:space:]]|$)' "$plan"
+          emerge "${opts[@]}" --oneshot "$atom"
+
+          vdb=/var/db/pkg/app-emulation/86Box-roms-9999
+          test "$(cat "$vdb/repository")" = goonbox-overlay
+          test -s "$vdb/CONTENTS"
+          test -s "$vdb/environment.bz2"
+          rom_dir=/usr/share/86Box/roms
+          grep -Eq '^obj /usr/share/86Box/roms/' "$vdb/CONTENTS"
+          count=$(find "$rom_dir" -type f -size +0c -printf . | wc -c)
+          test "$count" -gt 0
+
+          # The saved ebuild environment is data. Never source or eval it.
+          # Accept exactly one complete EGIT_VERSION assignment with a full SHA.
+          revision=$(bzip2 -dc -- "$vdb/environment.bz2" | python3 -c '
+          import re
+          import sys
+
+          version = re.compile(
+              rb"(?:declare (?:-[a-zA-Z]+|--) )?EGIT_VERSION=(?:"
+              rb"([0-9a-f]{40})|\"([0-9a-f]{40})\"|\x27([0-9a-f]{40})\x27)"
+          )
+          prefix = re.compile(rb"(?:declare (?:-[a-zA-Z]+|--) )?EGIT_VERSION=")
+          assignments = [line.rstrip(b"\n") for line in sys.stdin.buffer if prefix.match(line)]
+          if len(assignments) != 1 or not (match := version.fullmatch(assignments[0])):
+              sys.exit("Expected one full EGIT_VERSION SHA in the installed package environment")
+          print(next(value for value in match.groups() if value).decode("ascii"))
+          ')
+          printf 'ROM package: %s\nROM upstream commit: %s\nNonempty ROM files: %s\n' "$atom" "$revision" "$count"
+          GENTOO
