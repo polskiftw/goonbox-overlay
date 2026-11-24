@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Check out goonbox-overlay
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Compile selected ebuild(s) in Gentoo
         env:
@@ -28,12 +30,20 @@ jobs:
           docker pull gentoo/portage:latest
           docker pull gentoo/stage3:latest
 
+          snapshot_mount=goonbox-overlay-build-snapshot
+          if [[ $LIVE_TARGET == rnote ]]; then
+            printf 'Overlay commit: %s\n' "$(git rev-parse HEAD)"
+            docker image inspect --format '{{.RepoTags}} {{.RepoDigests}}' \
+              gentoo/stage3:latest gentoo/portage:latest
+            snapshot_mount+=:ro
+          fi
+
           docker create --name goonbox-overlay-build-snapshot \
             gentoo/portage:latest /bin/true
           trap 'docker rm -f goonbox-overlay-build-snapshot >/dev/null 2>&1 || true' EXIT
 
           docker run --rm \
-            --volumes-from goonbox-overlay-build-snapshot \
+            --volumes-from "$snapshot_mount" \
             -v "$GITHUB_WORKSPACE:/work/goonbox-overlay:ro" \
             -e LIVE_TARGET \
             gentoo/stage3:latest \
@@ -92,7 +102,41 @@ jobs:
                   emerge --noreplace --with-bdeps=y --verbose =games-action/ship-of-harkinian-9999
                   ;;
                 rnote)
-                  emerge --noreplace --with-bdeps=y --verbose media-gfx/rnote::goonbox-overlay
+                  # Only Rnote may use binary dependencies. Keep Portage
+                  # signature, USE, and dependency checks enabled.
+                  test "$(uname -m)" = x86_64
+                  rm -rf /etc/portage/binrepos.conf
+                  mkdir -p /etc/portage/binrepos.conf
+                  cat > /etc/portage/binrepos.conf/gentoo-ci.conf <<EOF
+          [gentoo-official]
+          sync-uri = https://distfiles.gentoo.org/releases/amd64/binpackages/23.0/x86-64/
+          EOF
+                  cat >> /etc/portage/make.conf <<"EOF"
+
+          FEATURES="${FEATURES} binpkg-request-signature"
+          EOF
+                  getuto
+                  atom=media-gfx/rnote::goonbox-overlay
+                  opts=(--color=n --verbose --with-bdeps=y --getbinpkg
+                    --binpkg-respect-use=y --binpkg-changed-deps=y --usepkg-exclude=media-gfx/rnote)
+                  plan=$(mktemp)
+                  emerge "${opts[@]}" --pretend --tree "$atom" | tee "$plan"
+                  mapfile -t source_targets < <(
+                    sed -nE "s/^\[ebuild[^]]*\][[:space:]]+(media-gfx\/rnote-[0-9][[:alnum:]_.-]*)::goonbox-overlay([[:space:]].*|$)/\1/p" "$plan"
+                  )
+                  if (( ${#source_targets[@]} != 1 )); then
+                    echo "Expected exactly one Rnote source ebuild from goonbox-overlay" >&2
+                    exit 2
+                  fi
+                  printf "Rnote source target: %s::goonbox-overlay\nBinary dependencies selected: %s\n" \
+                    "${source_targets[0]}" "$(grep -cE "^\[binary[[:space:]]" "$plan" || true)"
+                  emerge "${opts[@]}" --oneshot "$atom"
+                  vdb="/var/db/pkg/${source_targets[0]}"
+                  test -s "$vdb/CONTENTS"
+                  test "$(cat "$vdb/repository")" = goonbox-overlay
+                  test -x /usr/bin/rnote
+                  test -x /usr/bin/rnote-cli
+                  /usr/bin/rnote-cli --version
                   ;;
                 both)
                   emerge --noreplace --with-bdeps=y --verbose \
