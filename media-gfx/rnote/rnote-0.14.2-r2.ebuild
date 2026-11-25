@@ -146,7 +146,7 @@ CRATES="
 	font-types@0.11.2
 	fontconfig-parser@0.5.8
 	fontdb@0.23.0
-	form_urlencoded@1.2.2
+	form_urlencoded@1.2.3
 	fs_extra@1.3.0
 	fsevent-sys@4.1.0
 	futf@0.1.5
@@ -507,7 +507,7 @@ CRATES="
 	unicode-width@0.2.2
 	unicode-xid@0.2.6
 	unit-prefix@0.5.2
-	url@2.5.8
+	url@2.5.9
 	usvg@0.47.0
 	utf-8@0.7.6
 	utf8_iter@1.0.4

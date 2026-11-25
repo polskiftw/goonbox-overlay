@@ -2,6 +2,7 @@ Update vendored crates flagged by RustSec to their newest semver-compatible
 releases with `cargo update -p <crate>@<version>`:
   crossbeam-epoch 0.9.18 -> 0.9.21 (RUSTSEC-2026-0204)
   librsvg 2.61.4 -> 2.61.5 (RUSTSEC-2026-0305)
+  url 2.5.8 -> 2.5.9 and form_urlencoded 1.2.2 -> 1.2.3 (RUSTSEC-2026-0592)
 
 --- a/Cargo.lock
 +++ b/Cargo.lock
@@ -44,6 +45,14 @@ releases with `cargo update -p <crate>@<version>`:
  ]
  
  [[package]]
+@@ -1327,5 +1327,5 @@
+ name = "form_urlencoded"
+-version = "1.2.2"
++version = "1.2.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
++checksum = "afa489199eaffb1211795df1c6236ce1ad0d41a6fa45250add73e3b02420f06e"
+ dependencies = [
 @@ -1550,7 +1550,7 @@
  source = "registry+https://github.com/rust-lang/crates.io-index"
  checksum = "24f8647af4005fa11da47cd56252c6ef030be8fa97bdbf355e7dfb6348f0a82c"
@@ -101,6 +110,14 @@ releases with `cargo update -p <crate>@<version>`:
  ]
  
  [[package]]
+@@ -5227,5 +5227,5 @@
+ name = "url"
+-version = "2.5.8"
++version = "2.5.9"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed"
++checksum = "f00cd2407bb42c0ef17be88d4cf020f5cceffd121665bac9b8b9493a369b3b1a"
+ dependencies = [
 @@ -5543,7 +5543,7 @@
  source = "registry+https://github.com/rust-lang/crates.io-index"
  checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
