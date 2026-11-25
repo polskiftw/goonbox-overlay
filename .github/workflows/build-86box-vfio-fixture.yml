@@ -1,0 +1,157 @@
+name: 86Box experimental VFIO compile fixture (do not merge)
+
+on:
+  push:
+    branches:
+      - overlay-validation/86box-vfio-do-not-merge-20261125
+    paths:
+      - ".github/workflows/build-86box-vfio-fixture.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-86box-vfio-fixture
+  cancel-in-progress: false
+
+jobs:
+  build-layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Check out overlay
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Resolve, compile, and inspect the VFIO variant
+        shell: bash
+        run: |
+          set -euo pipefail
+          portage=gentoo/portage:latest
+          stage3=gentoo/stage3:latest
+          snapshot=goonbox-vfio-portage-snapshot
+
+          printf 'Overlay commit: %s\n' "$(git rev-parse HEAD)"
+          docker pull "$portage"
+          docker pull "$stage3"
+          docker image inspect --format '{{.RepoTags}} {{.RepoDigests}}' "$portage" "$stage3"
+          docker create --name "$snapshot" "$portage" /bin/true
+          trap 'docker rm -f "$snapshot" >/dev/null 2>&1 || true' EXIT
+
+          docker run --rm -i \
+            --volumes-from "$snapshot":ro \
+            -v "$GITHUB_WORKSPACE:/work/goonbox-overlay:ro" \
+            "$stage3" /bin/bash -s <<'GENTOO'
+          set -euo pipefail
+          export LC_ALL=C MAKEOPTS=-j2
+          expected=1fd06d54aedd75a021b4300fdaa37db586fc84dc
+          atom='=app-emulation/86Box-9999::goonbox-overlay'
+          ln -s /work/goonbox-overlay /var/db/repos/goonbox-overlay
+          rm -rf /etc/portage/repos.conf
+          mkdir -p /etc/portage/{repos.conf,package.accept_keywords,package.use,env}
+          cat > /etc/portage/repos.conf/ci.conf <<'CONF'
+          [DEFAULT]
+          main-repo = gentoo
+
+          [gentoo]
+          location = /var/db/repos/gentoo
+
+          [goonbox-overlay]
+          location = /var/db/repos/goonbox-overlay
+          masters = gentoo
+          CONF
+          printf '%s **\n%s ~amd64\n' "$atom" media-libs/librashader \
+            > /etc/portage/package.accept_keywords/86box-ci
+          cat > /etc/portage/package.use/86box-ci <<'CONF'
+          =app-emulation/86Box-9999::goonbox-overlay experimental vfio -disasm
+          dev-qt/qtbase opengl vulkan
+          dev-qt/qttools opengl
+          media-libs/libglvnd X
+          media-libs/libsdl2 opengl video
+          x11-libs/libxkbcommon X
+          CONF
+          printf '%s %s\n' "$atom" 86box-vfio-ci > /etc/portage/package.env
+          printf 'EGIT_OVERRIDE_COMMIT_86BOX_86BOX=%s\n' "$expected" \
+            > /etc/portage/env/86box-vfio-ci
+
+          opts=(--color=n --verbose --with-bdeps=y --usepkg=n --getbinpkg=n --buildpkg=n)
+          plan=$(mktemp)
+          emerge "${opts[@]}" --pretend --tree "$atom" | tee "$plan"
+          python3 - "$plan" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          text = Path(sys.argv[1]).read_text()
+          pattern = r'^\[ebuild[^]]*\]\s+app-emulation/86Box-9999::goonbox-overlay\s+USE="([^"]+)"'
+          matches = re.findall(pattern, text, re.MULTILINE)
+          if len(matches) != 1:
+              sys.exit("Expected one 86Box source ebuild from goonbox-overlay")
+          flags = set(matches[0].split())
+          if not {"experimental", "vfio", "-disasm"} <= flags or "disasm" in flags:
+              sys.exit("Dependency plan did not select experimental vfio -disasm")
+          PY
+          emerge "${opts[@]}" --oneshot "$atom"
+
+          vdb=/var/db/pkg/app-emulation/86Box-9999
+          helper=/usr/libexec/86box/vfio-setup
+          policy=/usr/share/polkit-1/actions/net.86box.86Box.vfio-setup.policy
+          test "$(cat "$vdb/repository")" = goonbox-overlay
+          test -s "$vdb/CONTENTS"
+          test -s "$vdb/environment.bz2"
+          portageq has_version / sys-auth/polkit
+          # Inspect installed metadata and data files. Never execute the helper
+          # or emulator, and never source the saved ebuild environment.
+          python3 - "$expected" "$vdb" "$helper" "$policy" <<'PY'
+          import bz2
+          import re
+          import stat
+          import sys
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          expected, vdb, helper, policy = sys.argv[1:]
+          vdb, helper, policy = map(Path, (vdb, helper, policy))
+          contents = (vdb / "CONTENTS").read_text()
+          for path in (helper, policy):
+              if not re.search(r"^obj " + re.escape(str(path)) + r" ", contents, re.MULTILINE):
+                  sys.exit(f"Expected installed package-owned file {path}")
+              mode = path.lstat()
+              if not stat.S_ISREG(mode.st_mode) or (mode.st_uid, mode.st_gid) != (0, 0) or mode.st_mode & 0o6022:
+                  sys.exit(f"Unexpected type, owner, or mode on {path}")
+          if not helper.stat().st_mode & stat.S_IXUSR:
+              sys.exit("The installed helper is not executable by its owner")
+
+          use = set((vdb / "USE").read_text().split())
+          if not {"experimental", "vfio"} <= use or "disasm" in use:
+              sys.exit("Installed USE flags did not match the test variant")
+
+          root = ET.parse(policy).getroot()
+          actions = root.findall("action")
+          if root.tag != "policyconfig" or len(actions) != 1:
+              sys.exit("Unexpected polkit policy structure")
+          action = actions[0]
+          if action.get("id") != "net.86box.86Box.vfio-setup":
+              sys.exit("Unexpected polkit action ID")
+          paths = action.findall("annotate[@key='org.freedesktop.policykit.exec.path']")
+          if len(paths) != 1 or paths[0].text != str(helper):
+              sys.exit("Policy does not point to the installed helper")
+          defaults = {k: action.findtext(f"defaults/{k}") for k in ("allow_any", "allow_inactive", "allow_active")}
+          if defaults != {"allow_any": "auth_admin", "allow_inactive": "auth_admin", "allow_active": "auth_admin_keep"}:
+              sys.exit("Policy does not retain upstream administrator authentication defaults")
+
+          prefix = re.compile(rb"(?:declare (?:-[a-zA-Z]+|--) )?EGIT_VERSION=")
+          value = re.compile(rb"(?:declare (?:-[a-zA-Z]+|--) )?EGIT_VERSION=(?:([0-9a-f]{40})|\"([0-9a-f]{40})\"|\x27([0-9a-f]{40})\x27)")
+          with bz2.open(vdb / "environment.bz2", "rb") as env:
+              records = [line.rstrip(b"\n") for line in env if prefix.match(line)]
+          if len(records) != 1 or not (match := value.fullmatch(records[0])):
+              sys.exit("Expected one full EGIT_VERSION SHA in installed Portage metadata")
+          revision = next(x for x in match.groups() if x).decode("ascii")
+          if revision != expected:
+              sys.exit("Installed 86Box was not built from the intended exact Git revision")
+          print(f"86Box upstream commit: {revision}")
+          print("Verified package USE: experimental vfio -disasm")
+          print("Verified installed helper ownership, modes, and matching polkit policy; neither was executed")
+          PY
+          GENTOO
