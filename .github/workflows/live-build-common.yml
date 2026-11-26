@@ -99,7 +99,11 @@ jobs:
                   emerge --noreplace --with-bdeps=y --verbose =app-emulation/86Box-9999
                   ;;
                 ship-of-harkinian)
-                  emerge --noreplace --with-bdeps=y --verbose =games-action/ship-of-harkinian-9999
+                  atom="=games-action/ship-of-harkinian-9999::goonbox-overlay"
+                  build_log=$(mktemp)
+                  emerge --color=n --noreplace --with-bdeps=y --verbose "$atom" | tee "$build_log"
+                  python3 /work/goonbox-overlay/.github/scripts/check-ship-revision.py \
+                    "$build_log" /var/db/pkg/games-action/ship-of-harkinian-9999
                   ;;
                 rnote)
                   # Only Rnote may use binary dependencies. Keep Portage

@@ -113,6 +113,8 @@ _git_checkout_ref() {
 	local destination=${4}
 	local EGIT_BRANCH=
 	local EGIT_COMMIT=
+	# Keep the installed live-package metadata pointing to Shipwright.
+	local EGIT_DIR EGIT_VERSION
 
 	git-r3_fetch "${uri}" "${remote_ref}" "${id}"
 	git-r3_checkout "${uri}" "${WORKDIR}/${destination}" "${id}"
