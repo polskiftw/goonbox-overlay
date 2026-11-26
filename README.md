@@ -57,6 +57,10 @@ emerge --sync
 emerge -1av media-gfx/rnote::goonbox-overlay
 ```
 
+On a minimal profile, Portage may request additional USE flags for GTK and
+its dependencies. Review the proposed changes for your desktop configuration
+before accepting them, then rerun the install command.
+
 ## Ship of Harkinian (live)
 
 The overlay provides `games-action/ship-of-harkinian-9999`, tracking Shipwright's `develop` branch. There is no versioned Ship of Harkinian ebuild in this repository.
